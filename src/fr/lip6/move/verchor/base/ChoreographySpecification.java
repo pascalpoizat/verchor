@@ -1,5 +1,6 @@
 package fr.lip6.move.verchor.base;
 
+import java.util.List;
 import java.util.HashMap;
 
 /**
@@ -7,11 +8,11 @@ import java.util.HashMap;
  */
 public abstract class ChoreographySpecification {
 
-    private HashMap<PeerId, Peer> peers;
+    private List<PeerId> peers;
     private HashMap<MessageId, Message> messages;
     private Behaviour behaviour;
 
-    public HashMap<PeerId, Peer> getPeers() {
+    public List<PeerId> getPeers() {
         return peers;
     }
 
