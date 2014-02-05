@@ -7,7 +7,7 @@ import java.util.ArrayList;
 /**
  * Created by pascalpoizat on 05/02/2014.
  */
-public abstract class Choreography {
+public class Choreography {
 
     private ChoreographySpecification choreographySpecification;
     private HashMap<PeerId, Peer> peers;
@@ -43,19 +43,15 @@ public abstract class Choreography {
         }
     }
 
-    public boolean isRealizable(EquivalenceChecker equivalenceChecker, Composer composer) {
-        return choreographySpecification.isRealizable(equivalenceChecker, composer);
+    public boolean isRealizable() {  // checks whether the choreography specification is realizable or not
+        return choreographySpecification.isRealizable();
     }
 
-    public boolean isConform(EquivalenceChecker equivalenceChecker, Composer composer) {
-        List<Behaviour> behaviourList = new ArrayList<Behaviour>();
-        for (Peer peer : peers.values()) {
-            behaviourList.add(peer.getBehaviour());
-        }
-        return equivalenceChecker.isEquivalent(choreographySpecification.getBehaviour(), composer.compose(behaviourList));
+    public boolean isConform() { // checks whether the set of peers conform to the choreography specification
+        return choreographySpecification.conformsWith(peers);
     }
 
-    public void project() {
+    public void project() { // computes the set of peers from the choreography specification (side-effect)
         peers = choreographySpecification.project();
     }
 
