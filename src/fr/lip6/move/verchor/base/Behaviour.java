@@ -8,10 +8,16 @@ import java.util.List;
  */
 public interface Behaviour {
 
+    public HashMap<MessageId, Message> getAlphabet();
+
     public State getInitialState();
+
     public HashMap<StateId, State> getFinalStates();
+
     public boolean isInitial(StateId stateId);
+
     public boolean isFinal(StateId stateId);
+
     public List<Transition> outgoingTransitions(StateId stateId);
 
 }
