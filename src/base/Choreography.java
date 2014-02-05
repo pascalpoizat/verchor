@@ -17,6 +17,16 @@ public abstract class Choreography {
         peers = new HashMap<PeerId, Peer>();
     }
 
+    public Choreography(ChoreographySpecification choreographySpecification) {
+        this.choreographySpecification = choreographySpecification;
+        peers = new HashMap<PeerId, Peer>();
+    }
+
+    public Choreography(ChoreographySpecification choreographySpecification, HashMap<PeerId, Peer> peers) {
+        this.choreographySpecification = choreographySpecification;
+        this.peers = peers;
+    }
+
     public ChoreographySpecification getSpecification() {
         return choreographySpecification;
     }
