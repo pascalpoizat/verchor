@@ -1,9 +1,8 @@
 package cif;
 
 import base.*;
-import models.cif.CifModel;
-
 import java.util.HashMap;
+import models.choreography.cif.CifModel;
 
 /**
  * Created by pascalpoizat on 05/02/2014.
