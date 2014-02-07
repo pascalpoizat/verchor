@@ -3,8 +3,8 @@ import base.Choreography;
 import base.ChoreographySpecification;
 import cif.CifChoreographySpecification;
 import models.base.FmtException;
-import models.cif.CifFactory;
-import models.cif.CifModel;
+import models.choreography.cif.CifFactory;
+import models.choreography.cif.CifModel;
 
 import java.io.IOException;
 

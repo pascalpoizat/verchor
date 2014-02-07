@@ -26,6 +26,8 @@ public abstract class ChoreographySpecification {
 
     public abstract boolean isRealizable(); // checks whether the choreography specification is realizable or not
 
+    public abstract boolean isSynchronizable(); // checkes whether the choreography specification is synchronizable or not
+
     public abstract boolean conformsWith(HashMap<PeerId, Peer> peers); // checks whether a set of peers is conform to the choreography specification
 
     public abstract HashMap<PeerId, Peer> project(); // computes a set of peers by projecting the choreography specification

@@ -1,5 +1,7 @@
 package base;
 
+import models.base.IllegalModelException;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,9 +12,9 @@ public interface Behaviour {
 
     public HashMap<MessageId, Message> getAlphabet();
 
-    public State getInitialState();
+    public State getInitialState() throws IllegalModelException;
 
-    public HashMap<StateId, State> getFinalStates();
+    public HashMap<StateId, ? extends State> getFinalStates();
 
     public boolean isInitial(StateId stateId);
 

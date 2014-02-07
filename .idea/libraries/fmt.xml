@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="fmt">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../fmt/out/artifacts/fmt/fmt.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

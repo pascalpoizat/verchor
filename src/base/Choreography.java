@@ -47,6 +47,10 @@ public class Choreography {
         return choreographySpecification.isRealizable();
     }
 
+    public boolean isSynchronizable() { // checks whether the choreography specification is synchronizable or not
+        return choreographySpecification.isSynchronizable();
+    }
+
     public boolean isConform() { // checks whether the set of peers conform to the choreography specification
         return choreographySpecification.conformsWith(peers);
     }
