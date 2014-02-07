@@ -1,5 +1,7 @@
 package base;
 
+import models.base.IllegalResourceException;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -43,19 +45,19 @@ public class Choreography {
         }
     }
 
-    public boolean isRealizable() {  // checks whether the choreography specification is realizable or not
+    public boolean isRealizable() throws IllegalResourceException {  // checks whether the choreography specification is realizable or not
         return choreographySpecification.isRealizable();
     }
 
-    public boolean isSynchronizable() { // checks whether the choreography specification is synchronizable or not
+    public boolean isSynchronizable() throws IllegalResourceException { // checks whether the choreography specification is synchronizable or not
         return choreographySpecification.isSynchronizable();
     }
 
-    public boolean isConform() { // checks whether the set of peers conform to the choreography specification
+    public boolean isConform() throws IllegalResourceException { // checks whether the set of peers conform to the choreography specification
         return choreographySpecification.conformsWith(peers);
     }
 
-    public void project() { // computes the set of peers from the choreography specification (side-effect)
+    public void project() throws IllegalResourceException { // computes the set of peers from the choreography specification (side-effect)
         peers = choreographySpecification.project();
     }
 

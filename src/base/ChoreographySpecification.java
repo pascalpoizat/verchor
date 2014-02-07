@@ -1,5 +1,7 @@
 package base;
 
+import models.base.IllegalResourceException;
+
 import java.util.List;
 import java.util.HashMap;
 
@@ -11,6 +13,14 @@ public abstract class ChoreographySpecification {
     private List<PeerId> peers;
     private HashMap<MessageId, Message> messages;
     private Behaviour behaviour;
+    private boolean changed; // used to indicate that the model has changed and LNT/SVL generation should be done
+    private boolean verbose;
+
+
+    public ChoreographySpecification() {
+        changed = true;
+        verbose = false;
+    }
 
     public List<PeerId> getPeers() {
         return peers;
@@ -24,12 +34,44 @@ public abstract class ChoreographySpecification {
         return behaviour;
     }
 
-    public abstract boolean isRealizable(); // checks whether the choreography specification is realizable or not
+    public boolean hasChanged() {
+        return changed;
+    }
 
-    public abstract boolean isSynchronizable(); // checkes whether the choreography specification is synchronizable or not
+    public void setChanged() {
+        // used to signal that the model has changed
+        // should be called each time the model is changed in order to keep synchronization between CIF model and generated LNT/SVL files
+        changed = true;
+    }
 
-    public abstract boolean conformsWith(HashMap<PeerId, Peer> peers); // checks whether a set of peers is conform to the choreography specification
+    protected abstract boolean isRealizable() throws IllegalResourceException; // checks whether the choreography specification is realizable or not
 
-    public abstract HashMap<PeerId, Peer> project(); // computes a set of peers by projecting the choreography specification
+    protected abstract boolean isSynchronizable() throws IllegalResourceException; // checkes whether the choreography specification is synchronizable or not
+
+    protected abstract boolean conformsWith(HashMap<PeerId, Peer> peers) throws IllegalResourceException; // checks whether a set of peers is conform to the choreography specification
+
+    protected abstract HashMap<PeerId, Peer> project() throws IllegalResourceException; // computes a set of peers by projecting the choreography specification
+
+    // methods below should probably move to Choreography
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
+    public void message(String msg) {
+        if (this.verbose) {
+            System.out.println("" + msg);
+        }
+    }
+
+    public void error(String msg) {
+        System.out.println("ERROR: " + msg);
+    }
+
+    public void warning(String msg) {
+        System.out.println("WARNING: " + msg);
+    }
+
+    public abstract void about();
 
 }

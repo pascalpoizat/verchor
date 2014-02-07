@@ -27,6 +27,8 @@ public class Test_Realizability_LNT {
             // get choreography
             ChoreographySpecification specification = new CifChoreographySpecification(model);
             Choreography choreography = new Choreography(specification);
+            specification.setVerbose(true);
+            specification.about();
             // check realizability
             boolean result = choreography.isRealizable();
             if (result)
@@ -34,9 +36,9 @@ public class Test_Realizability_LNT {
             else
                 System.out.println("not realizable");
         } catch (FmtException e) {
-            System.out.println(e.getMessage());
+            // NOTHING
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            // NOTHING
         }
     }
 }
