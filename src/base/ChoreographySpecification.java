@@ -44,18 +44,25 @@ public abstract class ChoreographySpecification {
         changed = true;
     }
 
-    protected abstract boolean isRealizable() throws IllegalResourceException; // checks whether the choreography specification is realizable or not
+    protected abstract boolean isRealizable(); // checks whether the choreography specification is realizable or not
 
-    protected abstract boolean isSynchronizable() throws IllegalResourceException; // checkes whether the choreography specification is synchronizable or not
+    protected abstract boolean isSynchronizable(); // checkes whether the choreography specification is synchronizable or not
 
-    protected abstract boolean conformsWith(HashMap<PeerId, Peer> peers) throws IllegalResourceException; // checks whether a set of peers is conform to the choreography specification
+    protected abstract boolean conformsWith(HashMap<PeerId, Peer> peers); // checks whether a set of peers is conform to the choreography specification
 
-    protected abstract HashMap<PeerId, Peer> project() throws IllegalResourceException; // computes a set of peers by projecting the choreography specification
+    protected abstract HashMap<PeerId, Peer> project(); // computes a set of peers by projecting the choreography specification
 
     // methods below should probably move to Choreography
 
     public void setVerbose(boolean verbose) {
+
+
+
         this.verbose = verbose;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
     }
 
     public void message(String msg) {
