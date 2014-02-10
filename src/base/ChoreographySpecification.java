@@ -38,10 +38,10 @@ public abstract class ChoreographySpecification {
         return changed;
     }
 
-    public void setChanged() {
+    public void setChanged(boolean status) {
         // used to signal that the model has changed
         // should be called each time the model is changed in order to keep synchronization between CIF model and generated LNT/SVL files
-        changed = true;
+        changed = status;
     }
 
     protected abstract boolean isRealizable(); // checks whether the choreography specification is realizable or not

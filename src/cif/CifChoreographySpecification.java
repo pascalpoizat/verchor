@@ -160,6 +160,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         generateLntFile();
         generateGeneralSvlScript();
         generateRealizabilitySvlScript();
+        setChanged(false);
     }
 
     private void generateFilesForSynchronizability() throws IllegalResourceException {
@@ -167,6 +168,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         generateLntFile();
         generateGeneralSvlScript();
         generateSynchronizabilitySvlScript();
+        setChanged(false);
     }
 
     private void setupStrings() {
@@ -223,10 +225,6 @@ public class CifChoreographySpecification extends ChoreographySpecification {
             IllegalResourceException e2 = new IllegalResourceException("Cannot open output resource");
             throw e2;
         }
-    }
-
-    private void executeSvlForDefinitions() {
-        // TODO
     }
 
     private boolean executeRealizabilityCheck() throws ExecutionException {
