@@ -1,0 +1,13 @@
+% CAESAR_OPEN_OPTIONS="-silent -warning"
+% CAESAR_OPTIONS="-more cat"
+
+% DEFAULT_PROCESS_FILE=comanche.lnt
+
+"comanche_specification_min.bcg" = safety reduction of tau*.a reduction of branching reduction of "MAIN [* the alphabet *]";
+
+"comanche_synch_composition.bcg" = root leaf branching reduction of
+* a sync red *"comanche_synch_composition_min.bcg"= weak trace reduction of safety reduction of tau*.a reduction of branching reduction of "comanche_synch_composition.bcg";
+
+"comanche_asynch_composition.bcg" = root leaf branching reduction of
+* an async red *"comanche_asynch_composition_min.bcg"= safety reduction of tau*.a reduction of branching reduction of "comanche_asynch_composition.bcg";
+
