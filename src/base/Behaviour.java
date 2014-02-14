@@ -3,6 +3,7 @@ package base;
 import models.base.IllegalModelException;
 
 import java.util.HashMap;
+import java.util.Set;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ import java.util.List;
  */
 public interface Behaviour {
 
-    public HashMap<MessageId, Message> getAlphabet();
+    public Set<Message> getAlphabet();
 
     public State getInitialState() throws IllegalModelException;
 
