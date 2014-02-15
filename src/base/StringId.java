@@ -17,4 +17,12 @@ public class StringId {
     public boolean equals(StringId other) {
         return id.equals(other.getId());
     }
+
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    public int compareTo(StringId other) {
+        return id.compareTo(other.getId());
+    }
 }
