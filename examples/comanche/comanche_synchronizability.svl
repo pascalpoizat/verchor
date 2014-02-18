@@ -1,2 +1,2 @@
-"comanche_synchronizability.bcg" = strong comparison using bfs with bisimulator "comanche_synch_composition_min.bcg" ==  "comanche_asynch_composition_min.bcg";
+"comanche_synchronizability.bcg" = strong comparison using bfs with bisimulator "comanche_synch_composition.bcg" ==  "comanche_asynch_composition.bcg";
 
