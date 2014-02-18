@@ -53,6 +53,7 @@ public class CifBehaviour implements Behaviour {
         Set<Peer> receivers;
         CifPeer receiver;
         CifAlphabetElement cifAlphabetElement;
+        alphabet = new HashSet<AlphabetElement>();
         for (Object o : model.getAlphabet().getMessageOrAction()) {
             if (o instanceof models.choreography.cif.generated.Message) {
                 models.choreography.cif.generated.Message m = (models.choreography.cif.generated.Message) o;
