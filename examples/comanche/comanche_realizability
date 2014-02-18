@@ -14,20 +14,20 @@ SVL_IGNORE=""
 # BODY #
 ########
 SVL_CHECK_FILE \
-	"comanche_synch_composition.bcg"
+	"comanche_specification.bcg"
 SVL_CHECK_FILE \
 	"comanche_asynch_composition.bcg"
 SVL_RECORD_FOR_CLEAN \
-	"comanche_synchronizability.bcg"
+	"comanche_realizability.bcg"
 SVL_COMPARISON \
 	"bisimulator" \
 	"strong" \
 	"bfs" \
-	"comanche_synch_composition.bcg" \
+	"comanche_specification.bcg" \
 	"" \
 	"comanche_asynch_composition.bcg" \
 	"" \
-	"comanche_synchronizability.bcg" \
+	"comanche_realizability.bcg" \
 	"EQUAL"
 
 ############
