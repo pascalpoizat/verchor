@@ -14,11 +14,6 @@ public class Choreography {
     private ChoreographySpecification choreographySpecification;
     private HashMap<PeerId, Peer> peers;
 
-    public Choreography() {
-        choreographySpecification = null;
-        peers = new HashMap<PeerId, Peer>();
-    }
-
     public Choreography(ChoreographySpecification choreographySpecification) {
         this.choreographySpecification = choreographySpecification;
         peers = new HashMap<PeerId, Peer>();
