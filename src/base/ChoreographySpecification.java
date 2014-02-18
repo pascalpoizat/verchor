@@ -11,12 +11,10 @@ public abstract class ChoreographySpecification {
     private List<PeerId> peers;
     private HashMap<MessageId, AlphabetElement> messages;
     private Behaviour behaviour;
-    private boolean changed; // used to indicate that the model has changed and LNT/SVL generation should be done
     private boolean verbose;
 
 
     public ChoreographySpecification() {
-        changed = true;
         verbose = false;
     }
 
@@ -30,16 +28,6 @@ public abstract class ChoreographySpecification {
 
     public Behaviour getBehaviour() {
         return behaviour;
-    }
-
-    public boolean hasChanged() {
-        return changed;
-    }
-
-    public void setChanged(boolean status) {
-        // used to signal that the model has changed
-        // should be called each time the model is changed in order to keep synchronization between CIF model and generated LNT/SVL files
-        changed = status;
     }
 
     protected abstract boolean isRealizable(); // checks whether the choreography specification is realizable or not
