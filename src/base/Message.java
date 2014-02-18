@@ -1,7 +1,16 @@
 package base;
 
 /**
- * Created by pascalpoizat on 05/02/2014.
+ * Created by pascalpoizat on 15/02/2014.
  */
-public class Message {
+public interface Message {
+
+    public MessageId getId();
+
+    @Override
+    public boolean equals(Object o);
+
+    @Override
+    public int hashCode();
+
 }

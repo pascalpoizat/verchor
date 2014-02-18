@@ -1,8 +1,8 @@
 package cif;
 
-import base.StateId;
+import base.*;
 import models.choreography.cif.generated.BaseState;
-import base.State;
+import models.choreography.cif.generated.InteractionState;
 import models.choreography.cif.generated.OneSuccState;
 import models.choreography.cif.generated.SeveralSuccState;
 
@@ -14,18 +14,30 @@ import java.util.List;
  */
 public class CifBehaviourState implements State {
 
+    // adapted
     private BaseState state;
+    // own data
     private StateId id;
     private List<StateId> successorIds;
-    private List<CifBehaviourTransition> incomingTransitions;
-    private List<CifBehaviourTransition> outgoingTransitions;
+    private List<Transition> incomingTransitions;
+    private List<Transition> outgoingTransitions;
 
     public CifBehaviourState(BaseState state) {
         this.state = state;
         this.id = new StateId(state.getStateID());
         initializeSuccessorIds();
-        this.incomingTransitions = new ArrayList<CifBehaviourTransition>();
-        this.outgoingTransitions = new ArrayList<CifBehaviourTransition>();
+        this.incomingTransitions = new ArrayList<Transition>();
+        this.outgoingTransitions = new ArrayList<Transition>();
+    }
+
+    @Override
+    public List<Transition> getIncomingTransitions() {
+        return incomingTransitions;
+    }
+
+    @Override
+    public List<Transition> getOutgoingTransitions() {
+        return outgoingTransitions;
     }
 
     public StateId getId() {
@@ -57,6 +69,16 @@ public class CifBehaviourState implements State {
             return SeveralSuccState.class;
         } else {
             return state.getClass();
+        }
+    }
+
+    public MessageId getMessageId() {
+        // method used to get the message id (for interaction states)
+        if(state instanceof InteractionState) {
+            return new MessageId(((InteractionState)state).getMsgID());
+        }
+        else {
+            return null;
         }
     }
 

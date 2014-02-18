@@ -3,9 +3,10 @@ package cif;
 import base.*;
 import models.base.IllegalModelException;
 import models.choreography.cif.CifModel;
+import models.choreography.cif.generated.StateMachine;
 import models.choreography.cif.generated.BaseState;
 import models.choreography.cif.generated.FinalState;
-import models.choreography.cif.generated.StateMachine;
+import base.Message;
 
 import java.util.*;
 
@@ -18,30 +19,69 @@ public class CifBehaviour implements Behaviour {
     private HashMap<StateId, CifBehaviourState> states;
     private CifBehaviourState initialState; // should be in states
     private HashMap<StateId, CifBehaviourState> finalStates; // all should be in states
+    private Set<AlphabetElement> alphabet;
     // wrapped data
+    private CifModel model;
     private StateMachine stateMachine;
 
-    public CifBehaviour(CifModel model) {
-        CifBehaviourState state;
-        stateMachine = null;
-        //
+    public CifBehaviour(CifModel model, HashMap<MessageId, Message> messages, HashMap<PeerId, Peer> peers) {
         try {
-            // try to get the model state machine
+            // try to get the model and state machine
+            this.model = model;
             stateMachine = model.getStateMachine();
-            // buid adapters for the states
-            buildStateAdapters();
-            // set initial state
-            initialState = states.get(new StateId(stateMachine.getInitial().getStateID()));
-            // set final states
-            finalStates = new HashMap<StateId, CifBehaviourState>();
-            for (FinalState finalState : stateMachine.getFinal()) {
-                state = states.get(new StateId(finalState.getStateID()));
-                finalStates.put(state.getId(), state);
-            }
-            // build the transition structure
-            buildTransitionStructure();
+            // compute the state machine (states, initial state, final states)
+            buildStateMachine();
+            // compute the alphabet
+            buildAlphabet(messages, peers);
         } catch (IllegalModelException e) {
+            stateMachine = null;
+            states = new HashMap<StateId, CifBehaviourState>();
+            initialState = null;
+            finalStates = new HashMap<StateId, CifBehaviourState>();
+            alphabet = new HashSet<AlphabetElement>();
         }
+    }
+
+    private void buildAlphabet(HashMap<MessageId, Message> messages, HashMap<PeerId, Peer> peers) throws IllegalModelException {
+        // in CIF, the set of all m[p,P] in the interactions
+        // where:
+        // m is a message (in the CIF model messages),
+        // p the initiating peer (in the CIF model peers),
+        // P are the receiving peers (in the CIF model peers)
+        CifMessage cifMessage;
+        CifPeer peer;
+        Set<Peer> receivers;
+        CifPeer receiver;
+        CifAlphabetElement cifAlphabetElement;
+        for (Object o : model.getAlphabet().getMessageOrAction()) {
+            if (o instanceof models.choreography.cif.generated.Message) {
+                models.choreography.cif.generated.Message m = (models.choreography.cif.generated.Message) o;
+                cifMessage = (CifMessage) messages.get(new MessageId(m.getMsgID()));
+                peer = (CifPeer) peers.get(new PeerId(m.getSender()));
+                receivers = new HashSet<Peer>();
+                // for the time being, only 1 receiver in CIF
+                receiver = (CifPeer) peers.get(new PeerId(m.getReceiver()));
+                receivers.add(receiver);
+                cifAlphabetElement = new CifAlphabetElement(cifMessage, peer, receivers);
+                alphabet.add(cifAlphabetElement);
+            }
+        }
+    }
+
+    private void buildStateMachine() {
+        CifBehaviourState state;
+        // buid adapters for the states
+        buildStateAdapters();
+        // set initial state
+        initialState = states.get(new StateId(stateMachine.getInitial().getStateID()));
+        // set final states
+        finalStates = new HashMap<StateId, CifBehaviourState>();
+        for (FinalState finalState : stateMachine.getFinal()) {
+            state = states.get(new StateId(finalState.getStateID()));
+            finalStates.put(state.getId(), state);
+        }
+        // build the transition structure
+        buildTransitionStructure();
     }
 
     private void buildTransitionStructure() {
@@ -90,9 +130,8 @@ public class CifBehaviour implements Behaviour {
     }
 
     @Override
-    public Set<Message> getAlphabet() {
-        // TODO
-        return null;
+    public Set<AlphabetElement> getAlphabet() {
+        return alphabet;
     }
 
     @Override
@@ -107,7 +146,7 @@ public class CifBehaviour implements Behaviour {
 
     @Override
     public boolean isInitial(StateId stateId) {
-        return (initialState.equals(stateId));
+        return (initialState.getId().equals(stateId));
     }
 
     @Override
@@ -117,12 +156,10 @@ public class CifBehaviour implements Behaviour {
 
     @Override
     public List<Transition> outgoingTransitions(StateId stateId) {
-        State state = states.get(stateId);
+        CifBehaviourState state = states.get(stateId);
         if (state == null) {
             return null;
         }
-        List<Transition> rtr = new ArrayList<Transition>();
-
-        return rtr;
+        return state.getOutgoingTransitions();
     }
 }

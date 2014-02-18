@@ -11,7 +11,7 @@ import java.util.List;
  */
 public interface Behaviour {
 
-    public Set<Message> getAlphabet();
+    public Set<AlphabetElement> getAlphabet();
 
     public State getInitialState() throws IllegalModelException;
 

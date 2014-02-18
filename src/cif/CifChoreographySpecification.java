@@ -4,14 +4,15 @@ import base.*;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 
+import base.Message;
+import base.Peer;
 import models.base.IllegalModelException;
 import models.choreography.cif.CifModel;
 import models.base.IllegalResourceException;
+import models.choreography.cif.generated.*;
 
 /**
  * Created by pascalpoizat on 05/02/2014.
@@ -89,10 +90,13 @@ public class CifChoreographySpecification extends ChoreographySpecification {
     private static final String lnt_suffix = ".lnt";
     private static final String bcg_suffix = ".bcg";
 
+    // adapted
     private CifModel model;
+    // own data
     private String name;
     private Behaviour behaviour;
-    private Set<PeerId> peers;
+    private HashMap<PeerId, Peer> peers;
+    private HashMap<MessageId, Message> messages;
 
     // file related attributes
     private String userdir;
@@ -109,23 +113,24 @@ public class CifChoreographySpecification extends ChoreographySpecification {
     private File general_script;
     private File lnt_file;
 
-    public CifChoreographySpecification(CifModel model) {
+    public CifChoreographySpecification(CifModel model) throws IllegalModelException {
         super();
         this.model = model;
-        setChanged(true);
+        setup();
+        setChanged(false);
     }
 
-    private void setup() {
+    private void setup() throws IllegalModelException {
         // builds the CifChoreographySpecification attributes from the model ones (to be used each time the model is changed)
         setupStrings();
-        computeStates();
-        computeAlphabet();
-        computePeers();
+        buildMessages();
+        buildPeers();
+        buildBehaviour();
     }
 
     @Override
     protected boolean conformsWith(HashMap<PeerId, Peer> peers) {
-        return false; // TODO : next release
+        return false; // NEXT RELEASE
         // issue : peers cannot be CIF models. May require "combination" factories eg CIF/LTS or PNML/PNML
     }
 
@@ -177,7 +182,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
 
     @Override
     protected HashMap<PeerId, Peer> project() {
-        return null; // TODO : next release
+        return null; // NEXT RELEASE
     }
 
     private void generateFilesForRealizability(boolean withSmartReduction, boolean generatePeers) throws IllegalResourceException, IllegalModelException {
@@ -209,9 +214,6 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         general_script = new File(model.getResource().getParent(), name + svl_suffix);
         realizability_script = new File(model.getResource().getParent(), name + realizability_suffix + svl_suffix);
         synchronizability_script = new File(model.getResource().getParent(), name + synchronizability_suffix + svl_suffix);
-        // get the behaviour from the model (adaptor)
-        behaviour = new CifBehaviour(model);
-        //
         message("working directory: " + userdir);
         message("name: " + name);
     }
@@ -249,7 +251,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         script += String.format("\"%s\"= safety reduction of tau*.a reduction of branching reduction of \"%s\";\n\n", asynchronous_composition_model_min, asynchronous_composition_model);
         //
         if (generatePeers) {
-            for (PeerId peer : peers) {
+            for (PeerId peer : peers.keySet()) {
                 script += "\"" + name + "_peer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"peer_" + peer + " [" + generateSvlAlphabet(behaviour.getAlphabet(), false, false) + "]\";\n\n";
                 script += "\"" + name + "_apeer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"apeer_" + peer + " [";
                 script += generateSvlAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, behaviour.getAlphabet())), false, false);
@@ -373,19 +375,31 @@ public class CifChoreographySpecification extends ChoreographySpecification {
 
     }
 
-    // computes the states of a choreography
-    private void computeStates() {
-        // TODO
+    // computes behaviour adaptor
+    private void buildBehaviour() {
+        behaviour = new CifBehaviour(model, messages, peers);
     }
 
-    // computes the alphabet of a choreography
-    private void computeAlphabet() {
-        // TODO
+    // computes Peer adaptors
+    private void buildPeers() throws IllegalModelException {
+        CifPeer cifPeer;
+        peers = new HashMap<PeerId, Peer>();
+        for (models.choreography.cif.generated.Peer peer : model.getParticipants().getPeer()) {
+            cifPeer = new CifPeer(peer);
+            peers.put(cifPeer.getId(), cifPeer);
+        }
     }
 
-    // computes the list of peers of a choreography
-    private void computePeers() {
-        // TODO
+    // computes Message adaptors
+    private void buildMessages() throws IllegalModelException {
+        CifMessage cifMessage;
+        messages = new HashMap<MessageId, Message>();
+        for (Object o : model.getAlphabet().getMessageOrAction()) {
+            if (o instanceof models.choreography.cif.generated.Message) {
+                cifMessage = new CifMessage((models.choreography.cif.generated.Message) o);
+                messages.put(cifMessage.getId(), cifMessage);
+            }
+        }
     }
 
     @Override
@@ -395,33 +409,33 @@ public class CifChoreographySpecification extends ChoreographySpecification {
 
     // OLD
 
-    private String computeSvlDefinitions(String name, Set<Message> alphabet, Set<PeerId> peers, String reduction, boolean generatePeers) {
+    private String computeSvlDefinitions(String name, Set<AlphabetElement> alphabet, Set<PeerId> peers, String reduction, boolean generatePeers) {
         String script = "";
         //
         return script;
     }
 
     // computes ...
-    private Set<Message> computeDirAlphabetforPeer(PeerId peer, Set<Message> alphabet) {
-        return new HashSet<Message>(); //
+    private Set<AlphabetElement> computeDirAlphabetforPeer(PeerId peer, Set<AlphabetElement> alphabet) {
+        return new HashSet<AlphabetElement>(); //
     }
 
     // computes ...
-    private Set<Message> computePeerAlphabetForPeer(PeerId peer, Set<Message> alphabet) {
-        return new HashSet<Message>(); //
+    private Set<AlphabetElement> computePeerAlphabetForPeer(PeerId peer, Set<AlphabetElement> alphabet) {
+        return new HashSet<AlphabetElement>(); //
     }
 
     // generates a string for an alphabet
-    private String generateSvlAlphabet(Set<Message> alphabet, boolean withAny, boolean withSynchronizingMessage) {
+    private String generateSvlAlphabet(Set<AlphabetElement> alphabet, boolean withAny, boolean withSynchronizingMessage) {
         return "* the alphabet *"; //
     }
 
     // generates ...
-    private String generateSvlSyncRedCompositional(Set<Message> alphabet, Set<PeerId> peers) {
+    private String generateSvlSyncRedCompositional(Set<AlphabetElement> alphabet, HashMap<PeerId, Peer> peers) {
         return "* a sync red *"; //
     }    // generates ...
 
-    private String generateSvlAsyncRedCompositional(Set<Message> alphabet, Set<PeerId> peers, boolean withHiding) {
+    private String generateSvlAsyncRedCompositional(Set<AlphabetElement> alphabet, HashMap<PeerId, Peer> peers, boolean withHiding) {
         return "* an async red *"; //
     }
 

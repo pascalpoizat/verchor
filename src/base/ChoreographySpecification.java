@@ -1,7 +1,5 @@
 package base;
 
-import models.base.IllegalResourceException;
-
 import java.util.List;
 import java.util.HashMap;
 
@@ -11,7 +9,7 @@ import java.util.HashMap;
 public abstract class ChoreographySpecification {
 
     private List<PeerId> peers;
-    private HashMap<MessageId, Message> messages;
+    private HashMap<MessageId, AlphabetElement> messages;
     private Behaviour behaviour;
     private boolean changed; // used to indicate that the model has changed and LNT/SVL generation should be done
     private boolean verbose;
@@ -26,7 +24,7 @@ public abstract class ChoreographySpecification {
         return peers;
     }
 
-    public HashMap<MessageId, Message> getMessages() {
+    public HashMap<MessageId, AlphabetElement> getMessages() {
         return messages;
     }
 

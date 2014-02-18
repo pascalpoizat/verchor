@@ -14,15 +14,24 @@ public class StringId {
         return id;
     }
 
-    public boolean equals(StringId other) {
-        return id.equals(other.getId());
-    }
-
-    public int hashCode() {
-        return id.hashCode();
-    }
-
     public int compareTo(StringId other) {
         return id.compareTo(other.getId());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        StringId stringId = (StringId) o;
+
+        if (!id.equals(stringId.id)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 }

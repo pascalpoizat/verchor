@@ -3,19 +3,18 @@ package base;
 /**
  * Created by pascalpoizat on 05/02/2014.
  */
-public class Peer {
+public interface Peer {
 
-    private Behaviour behaviour;
+    public PeerId getId();
 
-    public Peer() {
-        this.behaviour = null;
-    }
+    public void setBehaviour(Behaviour behaviour);
 
-    public void setBehaviour(Behaviour behaviour) {
-        this.behaviour = behaviour;
-    }
+    public Behaviour getBehaviour();
 
-    public Behaviour getBehaviour() {
-        return behaviour;
-    }
+    @Override
+    public boolean equals(Object o);
+
+    @Override
+    public int hashCode();
+
 }
