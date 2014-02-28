@@ -1,0 +1,16 @@
+% CAESAR_OPEN_OPTIONS="-silent -warning"
+% CAESAR_OPTIONS="-more cat"
+
+% DEFAULT_PROCESS_FILE=repeated_exchange.lnt
+
+"repeated_exchange_specification_min.bcg" = safety reduction of tau*.a reduction of branching reduction of
+"MAIN [peer1_peer2_ct1,peer2_peer1_ct2,peer1_peer2_ct3]";
+
+"repeated_exchange_synch_composition.bcg" = root leaf branching reduction of
+* a sync red *
+"repeated_exchange_synch_composition_min.bcg"= weak trace reduction of safety reduction of tau*.a reduction of branching reduction of "repeated_exchange_synch_composition.bcg";
+
+"repeated_exchange_asynch_composition.bcg" = root leaf branching reduction of
+* an async red *
+"repeated_exchange_asynch_composition_min.bcg"= safety reduction of tau*.a reduction of branching reduction of "repeated_exchange_asynch_composition.bcg";
+
