@@ -3,9 +3,7 @@ package cif;
 import base.*;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 import base.Message;
 import base.Peer;
@@ -24,7 +22,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
      * LTS generation:
      * v = new Checker()
      * c = new Choreography(filename)
-     * c.computeSyncSets()
+     * c.computeSyncSets(true)
      * c.generateLNT()
      * c.generateSVL(false,false)
      * v.cleanAll()
@@ -66,6 +64,9 @@ public class CifChoreographySpecification extends ChoreographySpecification {
     public static final String NAME = "lnt based verification";
     public static final String VERSION = "1.0";
 
+    // prefixes / suffixes for generated file contents
+    private static final String synchronous_prefix = "synchro_";
+    private static final String any_suffix = ":any";
     // file name parts
     private static final String synchronizability_suffix = "_synchronizability";
     private static final String realizability_suffix = "_realizability";
@@ -221,7 +222,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         script += "% CAESAR_OPEN_OPTIONS=\"-silent -warning\"\n% CAESAR_OPTIONS=\"-more cat\"\n\n";
         script += "% DEFAULT_PROCESS_FILE=" + name + ".lnt\n\n";
         //
-        script += String.format("\"%s\" = safety reduction of tau*.a reduction of branching reduction of \"MAIN [%s]\";\n\n", choreography_model_min, generateSvlAlphabet(behaviour.getAlphabet(), false, false));
+        script += String.format("\"%s\" = safety reduction of tau*.a reduction of branching reduction of \"MAIN [%s]\";\n\n", choreography_model_min, generateSvlAlphabet(behaviour.getAlphabet(), false, false, false));
         //
         script += String.format("\"%s\" = %s reduction of\n%s", synchronous_composition_model, reduction, generateSvlSyncRedCompositional(behaviour.getAlphabet(), peers));
         //
@@ -233,9 +234,9 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         //
         if (generatePeers) {
             for (PeerId peer : peers.keySet()) {
-                script += "\"" + name + "_peer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"peer_" + peer + " [" + generateSvlAlphabet(behaviour.getAlphabet(), false, false) + "]\";\n\n";
+                script += "\"" + name + "_peer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"peer_" + peer + " [" + generateSvlAlphabet(behaviour.getAlphabet(), false, false, false) + "]\";\n\n";
                 script += "\"" + name + "_apeer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"apeer_" + peer + " [";
-                script += generateSvlAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, behaviour.getAlphabet())), false, false);
+                script += generateSvlAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, behaviour.getAlphabet())), false, false, false);
                 script += "]\";\n\n";
             }
         }
@@ -407,17 +408,46 @@ public class CifChoreographySpecification extends ChoreographySpecification {
     }
 
     // generates a string for an alphabet
-    private String generateSvlAlphabet(Set<AlphabetElement> alphabet, boolean withAny, boolean withSynchronizingMessage) {
-        return "* the alphabet *"; //
+    private String generateSvlAlphabet(Set<AlphabetElement> alphabet, boolean withAny, boolean startComma, boolean withSynchronizingMessage) {
+        String rtr = "";
+        int size = alphabet.size();
+        int i = 0;
+        Set<AlphabetElement> alphabetWork;
+        if (!alphabet.isEmpty()) {
+            if (withSynchronizingMessage) {
+                SortedSet<AlphabetElement> sortedAlphabet = new TreeSet<AlphabetElement>(alphabet);
+                alphabetWork = sortedAlphabet;
+            } else {
+                alphabetWork = alphabet;
+            }
+            if (startComma) {
+                rtr += ",";
+            }
+            for (AlphabetElement alphabetElement : alphabetWork) {
+                if (withSynchronizingMessage) {
+                    rtr += synchronous_prefix;
+                }
+                rtr += alphabetElement.toString();
+                if (withAny) {
+                    rtr += any_suffix;
+                }
+                i++;
+                if (i < size) {
+                    rtr += ",";
+                }
+            }
+        }
+        return rtr;
     }
 
     // generates ...
     private String generateSvlSyncRedCompositional(Set<AlphabetElement> alphabet, HashMap<PeerId, Peer> peers) {
-        return "* a sync red *"; //
-    }    // generates ...
+        return "* a sync red *"; // TODO
+    }
 
+    // generates ...
     private String generateSvlAsyncRedCompositional(Set<AlphabetElement> alphabet, HashMap<PeerId, Peer> peers, boolean withHiding) {
-        return "* an async red *"; //
+        return "* an async red *"; // TODO
     }
 
 

@@ -48,4 +48,9 @@ public class CifPeer implements Peer {
     public int hashCode() {
         return id.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return id.toString();
+    }
 }

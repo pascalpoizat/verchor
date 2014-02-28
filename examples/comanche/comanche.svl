@@ -3,7 +3,7 @@
 
 % DEFAULT_PROCESS_FILE=comanche.lnt
 
-"comanche_specification_min.bcg" = safety reduction of tau*.a reduction of branching reduction of "MAIN [* the alphabet *]";
+"comanche_specification_min.bcg" = safety reduction of tau*.a reduction of branching reduction of "MAIN [client_frontend_ChoreographyTask_3,requestDispatcher_errorRequestHandler_ChoreographyTask_7,errorRequestHandler_client_ChoreographyTask_9,requestAnalyzer_logger_ChoreographyTask_1,fileRequestHandler_client_ChoreographyTask_4,requestAnalyzer_requestDispatcher_ChoreographyTask_2,requestAnalyzer_client_ChoreographyTask_8,frontend_requestAnalyzer_ChoreographyTask_5,requestDispatcher_fileRequestHandler_ChoreographyTask_6]";
 
 "comanche_synch_composition.bcg" = root leaf branching reduction of
 * a sync red *"comanche_synch_composition_min.bcg"= weak trace reduction of safety reduction of tau*.a reduction of branching reduction of "comanche_synch_composition.bcg";

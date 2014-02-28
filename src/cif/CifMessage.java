@@ -38,4 +38,9 @@ public class CifMessage implements Message {
     public int hashCode() {
         return id.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return id.toString();
+    }
 }

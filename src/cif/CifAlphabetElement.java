@@ -40,9 +40,7 @@ public class CifAlphabetElement implements AlphabetElement {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         CifAlphabetElement that = (CifAlphabetElement) o;
-
         if (!initiator.equals(that.initiator)) return false;
         if (!message.equals(that.message)) return false;
         if (!receivers.equals(that.receivers)) return false;
@@ -56,5 +54,15 @@ public class CifAlphabetElement implements AlphabetElement {
         result = 31 * result + initiator.hashCode();
         result = 31 * result + receivers.hashCode();
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s_%s_%s",initiator.toString(),receivers.iterator().next().toString(),message.toString());
+    }
+
+    @Override
+    public int compareTo(AlphabetElement o) {
+        return this.toString().compareTo(o.toString());
     }
 }
