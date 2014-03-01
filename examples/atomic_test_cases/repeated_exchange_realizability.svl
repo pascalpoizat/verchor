@@ -1,2 +1,0 @@
-"repeated_exchange_realizability.bcg" = strong comparison using bfs with bisimulator "repeated_exchange_specification.bcg" ==  "repeated_exchange_asynch_composition.bcg";
-
