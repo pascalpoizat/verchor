@@ -1,3 +1,4 @@
+package cif;
 
 import base.Choreography;
 import base.ChoreographySpecification;
@@ -11,7 +12,7 @@ import java.io.IOException;
 /**
  * Created by pascalpoizat on 05/02/2014.
  */
-public class Test_Realizability_LNT {
+public class RealizabilityChecker {
     public static void main(String[] args) {
         /**
          * takes as input a choreography specification file (CIF format) and checks whether it is realizable or not
