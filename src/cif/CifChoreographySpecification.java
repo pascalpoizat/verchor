@@ -28,9 +28,9 @@ public class CifChoreographySpecification extends ChoreographySpecification {
      * v.cleanAll()
      * v.generateLTS(c,false)
      * <p/>
-     * Synchronizability/Realizability:
+     * Synchronizability/Realizability (supposes that LTS have been generated):
      * v = new Checker()
-     * c = new Choreograph(filename)
+     * c = new Choreography(filename)
      * v.cleanSynchronizabilityResults() / v.cleanRealizabilityResults()
      * resultS = v.isSynchronizable(c,false) / resultR = v.isRealizable(c,false)
      * <p/>
@@ -130,7 +130,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
 
     @Override
     protected boolean conformsWith(HashMap<PeerId, Peer> peers) {
-        return false; // NEXT RELEASE
+        return false; // NEXT RELEASE implement conformance checking
         // issue : peers cannot be CIF models. May require "combination" factories eg CIF/LTS or PNML/PNML
     }
 
@@ -164,7 +164,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
 
     @Override
     protected HashMap<PeerId, Peer> project() {
-        return null; // NEXT RELEASE
+        return null; // NEXT RELEASE implement projection
     }
 
     private void generateFilesForRealizability(boolean withSmartReduction, boolean generatePeers) throws IllegalResourceException, IllegalModelException {
@@ -181,9 +181,12 @@ public class CifChoreographySpecification extends ChoreographySpecification {
 
     private void setupStrings() {
         // sets up strings to be used in verification for the representation of different processes (synchronous composition, asynchronous composition, etc.)
+        // name of the choreography (used as a core element in all files / processes names)
         name = model.getResource().getName();
         name = name.substring(0, name.length() - (model.getSuffix().length() + 1));
+        // directory to put the files on
         userdir = model.getResource().getParent();
+        // model names
         choreography_model = name + choreography_model_suffix + bcg_suffix;
         synchronous_composition_model = name + synchronous_composition_suffix + bcg_suffix;
         asynchronous_composition_model = name + asynchronous_composition_suffix + bcg_suffix;
@@ -192,10 +195,12 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         asynchronous_composition_model_min = name + asynchronous_composition_suffix + minimizing_suffix + bcg_suffix;
         synchronizability_result_model = name + synchronizability_suffix + bcg_suffix;
         realizability_result_model = name + realizability_suffix + bcg_suffix;
+        // file names
         lnt_file = new File(model.getResource().getParent(), name + lnt_suffix);
         general_script = new File(model.getResource().getParent(), name + svl_suffix);
         realizability_script = new File(model.getResource().getParent(), name + realizability_suffix + svl_suffix);
         synchronizability_script = new File(model.getResource().getParent(), name + synchronizability_suffix + svl_suffix);
+        //
         message("working directory: " + userdir);
         message("name: " + name);
     }
@@ -203,6 +208,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
     private void generateLntFile() throws IllegalResourceException {
         // generate LNT file from a CIF model (definition of the MAIN process, ie the one for the choreography specification)
         String script = "";
+        script += generateLntDataTypes(behaviour.getAlphabet());
         // TODO
         writeToFile(script, lnt_file);
         message("LNT file generated");
@@ -222,13 +228,13 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         script += "% CAESAR_OPEN_OPTIONS=\"-silent -warning\"\n% CAESAR_OPTIONS=\"-more cat\"\n\n";
         script += "% DEFAULT_PROCESS_FILE=" + name + ".lnt\n\n";
         //
-        script += String.format("\"%s\" = safety reduction of tau*.a reduction of branching reduction of \"MAIN [%s]\";\n\n", choreography_model_min, generateSvlAlphabet(behaviour.getAlphabet(), false, false, false));
+        script += String.format("\"%s\" = safety reduction of tau*.a reduction of branching reduction of\n\"MAIN [%s]\";\n\n", choreography_model_min, generateSvlAlphabet(behaviour.getAlphabet(), false, false, false));
         //
-        script += String.format("\"%s\" = %s reduction of\n%s", synchronous_composition_model, reduction, generateSvlSyncRedCompositional(behaviour.getAlphabet(), peers));
+        script += String.format("\"%s\" = %s reduction of\n%s\n", synchronous_composition_model, reduction, generateSvlSyncRedCompositional(behaviour.getAlphabet(), peers));
         //
         script += String.format("\"%s\"= weak trace reduction of safety reduction of tau*.a reduction of branching reduction of \"%s\";\n\n", synchronous_composition_model_min, synchronous_composition_model);
         //
-        script += String.format("\"%s\" = %s reduction of\n%s", asynchronous_composition_model, reduction, generateSvlAsyncRedCompositional(behaviour.getAlphabet(), peers, true));
+        script += String.format("\"%s\" = %s reduction of\n%s\n", asynchronous_composition_model, reduction, generateSvlAsyncRedCompositional(behaviour.getAlphabet(), peers, true));
         //
         script += String.format("\"%s\"= safety reduction of tau*.a reduction of branching reduction of \"%s\";\n\n", asynchronous_composition_model_min, asynchronous_composition_model);
         //
@@ -399,12 +405,12 @@ public class CifChoreographySpecification extends ChoreographySpecification {
 
     // computes ...
     private Set<AlphabetElement> computeDirAlphabetforPeer(PeerId peer, Set<AlphabetElement> alphabet) {
-        return new HashSet<AlphabetElement>(); //
+        return new HashSet<AlphabetElement>(); // TODO
     }
 
     // computes ...
     private Set<AlphabetElement> computePeerAlphabetForPeer(PeerId peer, Set<AlphabetElement> alphabet) {
-        return new HashSet<AlphabetElement>(); //
+        return new HashSet<AlphabetElement>(); // TODO
     }
 
     // generates a string for an alphabet
@@ -450,5 +456,68 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         return "* an async red *"; // TODO
     }
 
+    // generates the data type part of the LNT process encoding
+    private String generateLntDataTypes(Set<AlphabetElement> alphabet) {
+        String rtr = "";
+        rtr += "type Message is\n";
+        rtr += generateSvlAlphabet(alphabet,false,false,false);
+        rtr += "\n";
+        rtr += "with \"==\", \"!=\"\n";
+        rtr += "end type\n\n";
+        rtr += "type Buffer is list of Message\n";
+        rtr += "with \"==\", \"!=\"\n";
+        rtr += "end type\n\n";
+        rtr += "type BoundedBuffer is bbuffer (buffer: Buffer, bound: Nat)\n";
+        rtr += "with \"==\", \"!=\"\n";
+        rtr += "end type\n\n";
+        rtr += "function insert (m: Message, q: Buffer): Buffer is\n";
+        rtr += "         case q in\n";
+        rtr += "         var hd: Message, tl: Buffer in\n";
+        rtr += "             nil         -> return cons(m,nil)\n";
+        rtr += "           | cons(hd,tl) -> return insert(m,tl)\n";
+        rtr += "         end case\n";
+        rtr += "end function\n\n";
+        rtr += "function ishead (m: Message, q: Buffer): Bool is\n";
+        rtr += "         case q in\n";
+        rtr += "         var hd: Message, tl: Buffer in\n";
+        rtr += "             nil         -> return false\n";
+        rtr += "           | cons(hd,tl) -> return (m==hd)\n";
+        rtr += "         end case\n";
+        rtr += "end function\n\n";
+        rtr += "function remove (q: Buffer): Buffer is\n";
+        rtr += "         case q in\n";
+        rtr += "         var hd: Message, tl: Buffer in\n";
+        rtr += "             nil         -> return nil\n";
+        rtr += "           | cons(hd,tl) -> return tl\n";
+        rtr += "         end case\n";
+        rtr += "end function\n\n";
+        rtr += "function count (q: Buffer): Nat is\n";
+        rtr += "         case q in\n";
+        rtr += "         var hd: Message, tl: Buffer in\n";
+        rtr += "             nil         -> return 0\n";
+        rtr += "           | cons(hd,tl) -> return (1+count(tl))\n";
+        rtr += "         end case\n";
+        rtr += "end function\n\n";
+        rtr += "function bisfull (bq: BoundedBuffer): Bool is\n";
+        rtr += "  return ((count(bq.buffer))==bq.bound)\n";
+        rtr += "end function\n\n";
+        rtr += "function binsert (m: Message, bq: BoundedBuffer): BoundedBuffer is\n";
+        rtr += "  if bisfull(bq) then\n";
+        rtr += "     return bq\n";
+        rtr += "  else\n";
+        rtr += "     return bbuffer(insert(m,bq.buffer),bq.bound)\n";
+        rtr += "  end if\n";
+        rtr += "end function\n\n";
+        rtr += "function bishead (m: Message, bq: BoundedBuffer): Bool is\n";
+        rtr += "  return ishead(m,bq.buffer)\n";
+        rtr += "end function\n\n";
+        rtr += "function bremove (bq: BoundedBuffer): BoundedBuffer is\n";
+        rtr += "  return bbuffer(remove(bq.buffer),bq.bound)\n";
+        rtr += "end function\n\n";
+        rtr += "function bcount (bq: BoundedBuffer): Nat is\n";
+        rtr += "  return count(bq.buffer)\n";
+        rtr += "end function\n\n";
+        return rtr;
+    }
 
 }
