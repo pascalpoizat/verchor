@@ -10,7 +10,6 @@ import base.Peer;
 import models.base.IllegalModelException;
 import models.choreography.cif.CifModel;
 import models.base.IllegalResourceException;
-import models.choreography.cif.generated.*;
 
 /**
  * Created by pascalpoizat on 05/02/2014.
@@ -228,7 +227,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         script += "% CAESAR_OPEN_OPTIONS=\"-silent -warning\"\n% CAESAR_OPTIONS=\"-more cat\"\n\n";
         script += "% DEFAULT_PROCESS_FILE=" + name + ".lnt\n\n";
         //
-        script += String.format("\"%s\" = safety reduction of tau*.a reduction of branching reduction of\n\"MAIN [%s]\";\n\n", choreography_model_min, generateSvlAlphabet(behaviour.getAlphabet(), false, false, false));
+        script += String.format("\"%s\" = safety reduction of tau*.a reduction of branching reduction of\n\"MAIN [%s]\";\n\n", choreography_model_min, generateAlphabet(behaviour.getAlphabet(), false, false, false));
         //
         script += String.format("\"%s\" = %s reduction of\n%s\n", synchronous_composition_model, reduction, generateSvlSyncRedCompositional(behaviour.getAlphabet(), peers));
         //
@@ -240,9 +239,9 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         //
         if (generatePeers) {
             for (PeerId peer : peers.keySet()) {
-                script += "\"" + name + "_peer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"peer_" + peer + " [" + generateSvlAlphabet(behaviour.getAlphabet(), false, false, false) + "]\";\n\n";
+                script += "\"" + name + "_peer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"peer_" + peer + " [" + generateAlphabet(behaviour.getAlphabet(), false, false, false) + "]\";\n\n";
                 script += "\"" + name + "_apeer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"apeer_" + peer + " [";
-                script += generateSvlAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, behaviour.getAlphabet())), false, false, false);
+                script += generateAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, behaviour.getAlphabet())), false, false, false);
                 script += "]\";\n\n";
             }
         }
@@ -414,7 +413,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
     }
 
     // generates a string for an alphabet
-    private String generateSvlAlphabet(Set<AlphabetElement> alphabet, boolean withAny, boolean startComma, boolean withSynchronizingMessage) {
+    private String generateAlphabet(Set<AlphabetElement> alphabet, boolean withAny, boolean startComma, boolean withSynchronizingMessage) {
         String rtr = "";
         int size = alphabet.size();
         int i = 0;
@@ -460,7 +459,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
     private String generateLntDataTypes(Set<AlphabetElement> alphabet) {
         String rtr = "";
         rtr += "type Message is\n";
-        rtr += generateSvlAlphabet(alphabet,false,false,false);
+        rtr += generateAlphabet(alphabet, false, false, false);
         rtr += "\n";
         rtr += "with \"==\", \"!=\"\n";
         rtr += "end type\n\n";
