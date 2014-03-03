@@ -226,27 +226,21 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         // header
         script += "% CAESAR_OPEN_OPTIONS=\"-silent -warning\"\n% CAESAR_OPTIONS=\"-more cat\"\n\n";
         script += "% DEFAULT_PROCESS_FILE=" + name + ".lnt\n\n";
-        //
+        // composition processes and their reductions
         script += String.format("\"%s\" = safety reduction of tau*.a reduction of branching reduction of\n\"MAIN [%s]\";\n\n", choreography_model_min, generateAlphabet(behaviour.getAlphabet(), false, false, false));
-        //
         script += String.format("\"%s\" = %s reduction of\n%s\n", synchronous_composition_model, reduction, generateSvlSyncRedCompositional(behaviour.getAlphabet(), peers));
-        //
-        script += String.format("\"%s\"= weak trace reduction of safety reduction of tau*.a reduction of branching reduction of \"%s\";\n\n", synchronous_composition_model_min, synchronous_composition_model);
-        //
+        script += String.format("\"%s\"= weak trace reduction of safety reduction of tau*.a reduction of branching reduction of \"%s\";\n\n", synchronous_composition_model_min, synchronous_composition_model); // NEXT RELEASE : use the table of reductions
         script += String.format("\"%s\" = %s reduction of\n%s\n", asynchronous_composition_model, reduction, generateSvlAsyncRedCompositional(behaviour.getAlphabet(), peers, true));
-        //
-        script += String.format("\"%s\"= safety reduction of tau*.a reduction of branching reduction of \"%s\";\n\n", asynchronous_composition_model_min, asynchronous_composition_model);
-        //
+        script += String.format("\"%s\"= safety reduction of tau*.a reduction of branching reduction of \"%s\";\n\n", asynchronous_composition_model_min, asynchronous_composition_model); // NEXT RELEASE : use the table of reductions
+        // peers
         if (generatePeers) {
             for (PeerId peer : peers.keySet()) {
-                script += "\"" + name + "_peer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"peer_" + peer + " [" + generateAlphabet(behaviour.getAlphabet(), false, false, false) + "]\";\n\n";
-                script += "\"" + name + "_apeer_" + peer + ".bcg\" = safety reduction of tau*.a reduction of \"apeer_" + peer + " [";
-                script += generateAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, behaviour.getAlphabet())), false, false, false);
-                script += "]\";\n\n";
+                script += String.format("\"%s_peer_%s.bcg\" = safety reduction of tau*.a reduction of \"peer_%s [%s]\";\n\n", name, peer, peer,
+                        generateAlphabet(behaviour.getAlphabet(), false, false, false)); // NEXT RELEASE : use the table of reductions and static String formats
+                script += String.format("\"%s_apeer_%s.bcg\" = safety reduction of tau*.a reduction of \"apeer_%s [%s]\";\n\n", name, peer, peer,
+                        generateAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, behaviour.getAlphabet())), false, false, false)); // NEXT RELEASE : use the table of reductions and static String formats
             }
         }
-        // TODO la suite
-
         writeToFile(script, general_script);
         message("general script generated");
     }
