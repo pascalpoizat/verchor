@@ -66,6 +66,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
     // prefixes / suffixes for generated file contents
     private static final String synchronous_prefix = "synchro_";
     private static final String any_suffix = ":any";
+    private static final String reception_message_suffix = "_REC";
     // file name parts
     private static final String synchronizability_suffix = "_synchronizability";
     private static final String realizability_suffix = "_realizability";
@@ -238,7 +239,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
                 script += String.format("\"%s_peer_%s.bcg\" = safety reduction of tau*.a reduction of \"peer_%s [%s]\";\n\n", name, peer, peer,
                         generateAlphabet(behaviour.getAlphabet(), false, false, false)); // NEXT RELEASE : use the table of reductions and static String formats
                 script += String.format("\"%s_apeer_%s.bcg\" = safety reduction of tau*.a reduction of \"apeer_%s [%s]\";\n\n", name, peer, peer,
-                        generateAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, behaviour.getAlphabet())), false, false, false)); // NEXT RELEASE : use the table of reductions and static String formats
+                        generateAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, behaviour.getAlphabet())), false, false, false)); // NEXT RELEASE : use the table of reductions and static String formats // NEXT RELEASE : use only computeDirAlphabetForPeer() ?
             }
         }
         writeToFile(script, general_script);
@@ -258,7 +259,6 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         // generate SVL
         // equivalence between the choreography LTS and the distributed system LTS (async). Nb: here we only consider emissions in the distributed system
         // important : the signalChange() method should be called each time the CIF model changes (synchronization issue)
-        String result_model = name + realizability_suffix + bcg_suffix;
         String script = String.format("\"%s\" = %s with %s \"%s\" ==  \"%s\";\n\n", realizability_result_model, realizability_equivalence, EQUIVALENCE_CHECKER_COMMAND, choreography_model, asynchronous_composition_model);
         message("realizability checked with: " + script);
         writeToFile(script, realizability_script);
@@ -272,8 +272,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
             message("File " + file.getAbsolutePath() + " written");
             fw.close();
         } catch (IOException e) {
-            IllegalResourceException e2 = new IllegalResourceException("Cannot open output resource");
-            throw e2;
+            throw new IllegalResourceException("Cannot open output resource");
         }
     }
 
@@ -373,11 +372,11 @@ public class CifChoreographySpecification extends ChoreographySpecification {
 
     // computes Message adaptors
     private void buildMessages() throws IllegalModelException {
-        CifMessage cifMessage;
+        CifMessageAdaptor cifMessage;
         messages = new HashMap<MessageId, Message>();
         for (Object o : model.getAlphabet().getMessageOrAction()) {
             if (o instanceof models.choreography.cif.generated.Message) {
-                cifMessage = new CifMessage((models.choreography.cif.generated.Message) o);
+                cifMessage = new CifMessageAdaptor((models.choreography.cif.generated.Message) o);
                 messages.put(cifMessage.getId(), cifMessage);
             }
         }
@@ -388,24 +387,6 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         System.out.println(NAME + " " + VERSION);
     }
 
-    // OLD
-
-    private String computeSvlDefinitions(String name, Set<AlphabetElement> alphabet, Set<PeerId> peers, String reduction, boolean generatePeers) {
-        String script = "";
-        //
-        return script;
-    }
-
-    // computes ...
-    private Set<AlphabetElement> computeDirAlphabetforPeer(PeerId peer, Set<AlphabetElement> alphabet) {
-        return new HashSet<AlphabetElement>(); // TODO
-    }
-
-    // computes ...
-    private Set<AlphabetElement> computePeerAlphabetForPeer(PeerId peer, Set<AlphabetElement> alphabet) {
-        return new HashSet<AlphabetElement>(); // TODO
-    }
-
     // generates a string for an alphabet
     private String generateAlphabet(Set<AlphabetElement> alphabet, boolean withAny, boolean startComma, boolean withSynchronizingMessage) {
         String rtr = "";
@@ -413,10 +394,9 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         int i = 0;
         Set<AlphabetElement> alphabetWork;
         if (!alphabet.isEmpty()) {
-            if (withSynchronizingMessage) {
-                SortedSet<AlphabetElement> sortedAlphabet = new TreeSet<AlphabetElement>(alphabet);
-                alphabetWork = sortedAlphabet;
-            } else {
+            if (withSynchronizingMessage) { // tri alphabétique
+                alphabetWork = new TreeSet<AlphabetElement>(alphabet);
+            } else { // ordre d'insertion
                 alphabetWork = alphabet;
             }
             if (startComma) {
@@ -435,6 +415,42 @@ public class CifChoreographySpecification extends ChoreographySpecification {
                     rtr += ",";
                 }
             }
+        }
+        return rtr;
+    }
+
+    // filters an alphabet to keep only the elements relative to a peer, and adds a suffix to for the peer receptions
+    // returns a new alphabet (possibly sharing alphabet elements with the original one)
+    private Set<AlphabetElement> computeDirAlphabetforPeer(PeerId peer, Set<AlphabetElement> alphabet) throws IllegalModelException {
+        Set<AlphabetElement> rtr = new LinkedHashSet<AlphabetElement>();
+        for (AlphabetElement alphabetElement : alphabet) {
+            if (alphabetElement.getInitiatingPeer().getId().equals(peer)) { // if peer is the sender of the alphabet element: keep the same alphabet element
+                rtr.add(alphabetElement);
+            } else
+                for (Peer cifPeer : alphabetElement.getParticipants()) { // if peer is one of the receivers of the alphabet element: compute a new alphabet element with specific tagged message
+                    if (cifPeer.getId().equals(peer)) {
+                        Message newMessage = new CifMessage(alphabetElement.getMessage().getId() + reception_message_suffix);
+                        AlphabetElement modifiedAlphabetElement = new CifAlphabetElement(newMessage, alphabetElement.getInitiatingPeer(), alphabetElement.getParticipants());
+                        rtr.add(modifiedAlphabetElement);
+                    }
+                }
+        }
+        return rtr;
+    }
+
+    // filters an alphabet to keep only the elements relative to a peer
+    // returns a new alphabet (possibly sharing alphabet elements with the original one)
+    private Set<AlphabetElement> computePeerAlphabetForPeer(PeerId peer, Set<AlphabetElement> alphabet) {
+        Set<AlphabetElement> rtr = new LinkedHashSet<AlphabetElement>();
+        for (AlphabetElement alphabetElement : alphabet) {
+            if (alphabetElement.getInitiatingPeer().getId().equals(peer)) { // if peer is the sender of the alphabet element: keep the same alphabet element
+                rtr.add(alphabetElement);
+            } else
+                for (Peer cifPeer : alphabetElement.getParticipants()) { // if peer is one of the receivers of the alphabet element: compute a new alphabet element with specific tagged message
+                    if (cifPeer.getId().equals(peer)) {
+                        rtr.add(alphabetElement);
+                    }
+                }
         }
         return rtr;
     }

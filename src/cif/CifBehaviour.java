@@ -8,7 +8,14 @@ import models.choreography.cif.generated.BaseState;
 import models.choreography.cif.generated.FinalState;
 import base.Message;
 
-import java.util.*;
+import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Queue;
+import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 /**
  * Created by pascalpoizat on 06/02/2014.
@@ -25,6 +32,10 @@ public class CifBehaviour implements Behaviour {
     private StateMachine stateMachine;
 
     public CifBehaviour(CifModel model, HashMap<MessageId, Message> messages, HashMap<PeerId, Peer> peers) {
+        states = new HashMap<StateId, CifBehaviourState>();
+        initialState = null;
+        finalStates = new HashMap<StateId, CifBehaviourState>();
+        alphabet = new LinkedHashSet<AlphabetElement>(); // we use a set that is ordered by insertion
         try {
             // try to get the model and state machine
             this.model = model;
@@ -35,10 +46,6 @@ public class CifBehaviour implements Behaviour {
             buildAlphabet(messages, peers);
         } catch (IllegalModelException e) {
             stateMachine = null;
-            states = new HashMap<StateId, CifBehaviourState>();
-            initialState = null;
-            finalStates = new HashMap<StateId, CifBehaviourState>();
-            alphabet = new HashSet<AlphabetElement>();
         }
     }
 
@@ -48,16 +55,15 @@ public class CifBehaviour implements Behaviour {
         // m is a message (in the CIF model messages),
         // p the initiating peer (in the CIF model peers),
         // P are the receiving peers (in the CIF model peers)
-        CifMessage cifMessage;
+        CifMessageAdaptor cifMessage;
         CifPeer peer;
         Set<Peer> receivers;
         CifPeer receiver;
         CifAlphabetElement cifAlphabetElement;
-        alphabet = new HashSet<AlphabetElement>();
         for (Object o : model.getAlphabet().getMessageOrAction()) {
             if (o instanceof models.choreography.cif.generated.Message) {
                 models.choreography.cif.generated.Message m = (models.choreography.cif.generated.Message) o;
-                cifMessage = (CifMessage) messages.get(new MessageId(m.getMsgID()));
+                cifMessage = (CifMessageAdaptor) messages.get(new MessageId(m.getMsgID()));
                 peer = (CifPeer) peers.get(new PeerId(m.getSender()));
                 receivers = new HashSet<Peer>();
                 // for the time being, only 1 receiver in CIF

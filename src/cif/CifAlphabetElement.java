@@ -3,6 +3,7 @@ package cif;
 import base.AlphabetElement;
 import base.Message;
 import base.Peer;
+import models.base.IllegalModelException;
 
 import java.util.Set;
 
@@ -11,11 +12,14 @@ import java.util.Set;
  */
 public class CifAlphabetElement implements AlphabetElement {
 
-    private CifMessage message;
-    private CifPeer initiator;
-    private Set<Peer> receivers;
+    private Message message;
+    private Peer initiator;
+    private Set<Peer> receivers; // NEXT RELEASE : support more than 1 receiver (impacts on several methods)
 
-    public CifAlphabetElement(CifMessage message, CifPeer initiator, Set<Peer> receivers) {
+    public CifAlphabetElement(Message message, Peer initiator, Set<Peer> receivers) throws IllegalModelException {
+        if (receivers.size() != 1) {
+            throw new IllegalModelException("Illegal alphabet element has not exactly one receiver.");
+        }
         this.message = message;
         this.initiator = initiator;
         this.receivers = receivers;
@@ -33,6 +37,8 @@ public class CifAlphabetElement implements AlphabetElement {
 
     @Override
     public Set<Peer> getParticipants() {
+        // does not include the initiator
+        // always 1 participant
         return receivers;
     }
 
@@ -58,7 +64,7 @@ public class CifAlphabetElement implements AlphabetElement {
 
     @Override
     public String toString() {
-        return String.format("%s_%s_%s",initiator.toString(),receivers.iterator().next().toString(),message.toString());
+        return String.format("%s_%s_%s", initiator.toString(), receivers.iterator().next().toString(), message.toString());
     }
 
     @Override

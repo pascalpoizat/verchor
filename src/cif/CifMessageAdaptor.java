@@ -4,15 +4,18 @@ import base.Message;
 import base.MessageId;
 
 /**
- * Created by pascalpoizat on 03/03/2014.
+ * Created by pascalpoizat on 17/02/2014.
  */
-public class CifMessage implements Message {
+public class CifMessageAdaptor implements Message {
 
+    // adapted
+    private models.choreography.cif.generated.Message message;
     // own data
     private MessageId id;
 
-    public CifMessage(String id) {
-        this.id = new MessageId(id);
+    public CifMessageAdaptor(models.choreography.cif.generated.Message message) {
+        this.message = message;
+        this.id = new MessageId(message.getMsgID());
     }
 
     public MessageId getId() {
@@ -40,5 +43,4 @@ public class CifMessage implements Message {
     public String toString() {
         return id.toString();
     }
-
 }

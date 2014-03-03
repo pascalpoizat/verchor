@@ -34,6 +34,7 @@ public class CifPeer implements Peer {
 
     @Override
     public boolean equals(Object o) {
+        // two peers are equals if they have the same id
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
