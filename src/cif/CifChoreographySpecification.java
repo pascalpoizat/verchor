@@ -228,7 +228,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         script += "% CAESAR_OPEN_OPTIONS=\"-silent -warning\"\n% CAESAR_OPTIONS=\"-more cat\"\n\n";
         script += "% DEFAULT_PROCESS_FILE=" + name + ".lnt\n\n";
         // composition processes and their reductions
-        script += String.format("\"%s\" = safety reduction of tau*.a reduction of branching reduction of\n\"MAIN [%s]\";\n\n", choreography_model_min, generateAlphabet(behaviour.getAlphabet(), false, false, false));
+        script += String.format("\"%s\" = safety reduction of tau*.a reduction of branching reduction of\n\"MAIN [%s]\";\n\n", choreography_model_min, generateAlphabet(behaviour.getAlphabet(), false, false, false)); // NEXT RELEASE : use the table of reductions
         script += String.format("\"%s\" = %s reduction of\n%s\n", synchronous_composition_model, reduction, generateSvlSyncRedCompositional(behaviour.getAlphabet(), peers));
         script += String.format("\"%s\"= weak trace reduction of safety reduction of tau*.a reduction of branching reduction of \"%s\";\n\n", synchronous_composition_model_min, synchronous_composition_model); // NEXT RELEASE : use the table of reductions
         script += String.format("\"%s\" = %s reduction of\n%s\n", asynchronous_composition_model, reduction, generateSvlAsyncRedCompositional(behaviour.getAlphabet(), peers, true));
@@ -387,41 +387,81 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         System.out.println(NAME + " " + VERSION);
     }
 
-    // generates a string for an alphabet
-    private String generateAlphabet(Set<AlphabetElement> alphabet, boolean withAny, boolean startComma, boolean withSynchronizingMessage) {
+    // generates the synchronous composition of the peers of a choreography
+    private String generateSvlSyncRedCompositional(Set<AlphabetElement> alphabet, HashMap<PeerId, Peer> peers) {
         String rtr = "";
-        int size = alphabet.size();
+        Set<AlphabetElement> synchronizationAlphabet;
         int i = 0;
-        Set<AlphabetElement> alphabetWork;
-        if (!alphabet.isEmpty()) {
-            if (withSynchronizingMessage) { // tri alphabétique
-                alphabetWork = new TreeSet<AlphabetElement>(alphabet);
-            } else { // ordre d'insertion
-                alphabetWork = alphabet;
+        int nbPeers = peers.size();
+        for (Peer peer : peers.values()) {
+            if (i < nbPeers - 1) {
+                rtr += "par ";
+                synchronizationAlphabet = computeSynchronizationAlphabet(i, peers, alphabet);
+                if (!synchronizationAlphabet.isEmpty()) {
+                    rtr += generateAlphabet(synchronizationAlphabet, false, false, false);
+                }
+                rtr += " in\n";
             }
-            if (startComma) {
-                rtr += ",";
-            }
-            for (AlphabetElement alphabetElement : alphabetWork) {
-                if (withSynchronizingMessage) {
-                    rtr += synchronous_prefix;
-                }
-                rtr += alphabetElement.toString();
-                if (withAny) {
-                    rtr += any_suffix;
-                }
-                i++;
-                if (i < size) {
-                    rtr += ",";
-                }
+            rtr += String.format("peer_%s [%s]\n", peer.getId(), generateAlphabet(alphabet, false, false, false));
+            i++;
+            if (i < nbPeers) {
+                rtr += "||\n";
             }
         }
+        i = 1;
+        while (i < nbPeers - 1) {
+            rtr += "end par\n";
+            i++;
+        }
+        rtr += "end par;\n";
+        return rtr;
+    }
+
+    // generates the asynchronous composition of the peers of a choreography
+    private String generateSvlAsyncRedCompositional(Set<AlphabetElement> alphabet, HashMap<PeerId, Peer> peers, boolean withHiding) throws IllegalModelException {
+        String rtr = "";
+        Set<AlphabetElement> synchronizationAlphabet, peerAlphabet, peerBufferAlphabet;
+        int i = 0;
+        int nbPeers = peers.size();
+        for (Peer peer : peers.values()) {
+            peerAlphabet = computeDirAlphabetforPeer(peer.getId(), computePeerAlphabetForPeer(peer.getId(), alphabet));
+            peerBufferAlphabet = computeBothDirAlphabet(computeBufferAlphabetForPeer(peer.getId(), alphabet));
+            if (i < nbPeers - 1) {
+                rtr += "par ";
+                synchronizationAlphabet = computeSynchronizationAlphabet(i, peers, alphabet);
+                if (!synchronizationAlphabet.isEmpty()) {
+                    rtr += generateAlphabet(synchronizationAlphabet, false, false, false);
+                }
+                rtr += " in\n";
+            }
+            if (withHiding) {
+                if (!peerAlphabet.isEmpty()) {
+                    rtr += "(total hide ";
+                    rtr += generateAlphabetWithRec(peerAlphabet, false, false);
+                    rtr += " in\n";
+                }
+            }
+            rtr += String.format("peer_buffer_%s[%s---%s]", peer.getId(), generateAlphabet(peerAlphabet, false, false, false), generateAlphabet(peerBufferAlphabet, false, false, false));  // NEXT RELEASE : check if union is required or not
+            if (withHiding) {
+                rtr += ")\n";
+            }
+            i++;
+            if (i < nbPeers) {
+                rtr += "||\n";
+            }
+        }
+        i = 1;
+        while (i < nbPeers - 1) {
+            rtr += "end par\n";
+            i++;
+        }
+        rtr += "end par;\n";
         return rtr;
     }
 
     // filters an alphabet to keep only the elements relative to a peer, and adds a suffix to for the peer receptions
     // returns a new alphabet (possibly sharing alphabet elements with the original one)
-    private Set<AlphabetElement> computeDirAlphabetforPeer(PeerId peer, Set<AlphabetElement> alphabet) throws IllegalModelException {
+    private Set<AlphabetElement> computeDirAlphabetforPeer(PeerId peer, Set<AlphabetElement> alphabet) throws IllegalModelException { // NEXT RELEASE : possibly useless method (could be done using computeBothDirAlphabet + computePeerAlphabetForPeer)
         Set<AlphabetElement> rtr = new LinkedHashSet<AlphabetElement>();
         for (AlphabetElement alphabetElement : alphabet) {
             if (alphabetElement.getInitiatingPeer().getId().equals(peer)) { // if peer is the sender of the alphabet element: keep the same alphabet element
@@ -455,14 +495,72 @@ public class CifChoreographySpecification extends ChoreographySpecification {
         return rtr;
     }
 
-    // generates ...
-    private String generateSvlSyncRedCompositional(Set<AlphabetElement> alphabet, HashMap<PeerId, Peer> peers) {
-        return "* a sync red *"; // TODO
+    // computes an alphabet with both send/receive directions from a choreography alphabet
+    private Set<AlphabetElement> computeBothDirAlphabet(Set<AlphabetElement> alphabet) throws IllegalModelException {
+        Set<AlphabetElement> rtr = new LinkedHashSet<AlphabetElement>();
+        for (AlphabetElement alphabetElement : alphabet) {
+            rtr.add(alphabetElement);
+            Message newMessage = new CifMessage(alphabetElement.getMessage().getId() + reception_message_suffix);
+            AlphabetElement modifiedAlphabetElement = new CifAlphabetElement(newMessage, alphabetElement.getInitiatingPeer(), alphabetElement.getParticipants());
+            rtr.add(modifiedAlphabetElement);
+        }
+        return rtr;
     }
 
-    // generates ...
-    private String generateSvlAsyncRedCompositional(Set<AlphabetElement> alphabet, HashMap<PeerId, Peer> peers, boolean withHiding) {
-        return "* an async red *"; // TODO
+    // computes the alphabet used by buffers from their corresponding peer alphabet
+    private Set<AlphabetElement> computeBufferAlphabetForPeer(PeerId peer, Set<AlphabetElement> alphabet) {
+        Set<AlphabetElement> rtr = new LinkedHashSet<AlphabetElement>();
+        for (AlphabetElement alphabetElement : alphabet) {
+            if(alphabetElement.getParticipants().iterator().next().getId().equals(peer)) { // NEXT RELEASE : work with a list of participants
+                rtr.add(alphabetElement);
+            }
+        }
+        return rtr;
+    }
+
+    // ...
+    private Set<AlphabetElement> computeSynchronizationAlphabet(int fromPeer, HashMap<PeerId, Peer> peers, Set<AlphabetElement> alphabet) {
+        Set<AlphabetElement> rtr = new LinkedHashSet<AlphabetElement>();
+        // TODO
+        return rtr;
+    }
+
+    // generates a string for an alphabet
+    private String generateAlphabet(Set<AlphabetElement> alphabet, boolean withAny, boolean startComma, boolean withSynchronizingMessage) {
+        String rtr = "";
+        int size = alphabet.size();
+        int i = 0;
+        Set<AlphabetElement> alphabetWork;
+        if (!alphabet.isEmpty()) {
+            if (withSynchronizingMessage) { // tri alphabétique
+                alphabetWork = new TreeSet<AlphabetElement>(alphabet);
+            } else { // ordre d'insertion
+                alphabetWork = alphabet;
+            }
+            if (startComma) {
+                rtr += ",";
+            }
+            for (AlphabetElement alphabetElement : alphabetWork) {
+                if (withSynchronizingMessage) {
+                    rtr += synchronous_prefix;
+                }
+                rtr += alphabetElement.toString();
+                if (withAny) {
+                    rtr += any_suffix;
+                }
+                i++;
+                if (i < size) {
+                    rtr += ",";
+                }
+            }
+        }
+        return rtr;
+    }
+
+    private String generateAlphabetWithRec(Set<AlphabetElement> alphabet, boolean withAny, boolean startComma) {
+        String rtr = "";
+        // TODO
+        return rtr;
     }
 
     // generates the data type part of the LNT process encoding
