@@ -441,7 +441,7 @@ public class CifChoreographySpecification extends ChoreographySpecification {
                     rtr += " in\n";
                 }
             }
-            rtr += String.format("peer_buffer_%s[%s---%s]", peer.getId(), generateAlphabet(peerAlphabet, false, false, false), generateAlphabet(peerBufferAlphabet, false, false, false));  // NEXT RELEASE : check if union is required or not
+            rtr += String.format("peer_buffer_%s[%s,%s]", peer.getId(), generateAlphabet(peerAlphabet, false, false, false), generateAlphabet(peerBufferAlphabet, false, false, false));  // NEXT RELEASE : check if union is required or not
             if (withHiding) {
                 rtr += ")\n";
             }
@@ -559,7 +559,22 @@ public class CifChoreographySpecification extends ChoreographySpecification {
 
     private String generateAlphabetWithRec(Set<AlphabetElement> alphabet, boolean withAny, boolean startComma) {
         String rtr = "";
-        // TODO
+        int size = alphabet.size();
+        int i = 0;
+        if(startComma) {
+            rtr += ",";
+        }
+        for (AlphabetElement alphabetElement : alphabet) {
+            rtr += String.format("%s_REC",alphabetElement);
+            if (withAny) {
+                rtr += ":any";
+            }
+            i++;
+            if (i<size) {
+                rtr += ",";
+            }
+
+        }
         return rtr;
     }
 
