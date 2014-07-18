@@ -11,7 +11,7 @@ Contributors
 - Matthias Güdemann
 - Pascal Poizat, Université Paris Ouest and LIP6, CNRS - Université Pierre et Marie Curie
 - Gwen Salaün, ENSIMAG, Grenoble INP
-- Lina Ye,
+- Lina Ye
 
 Required Libraries
 ==================
