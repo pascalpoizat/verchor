@@ -1,9 +1,8 @@
 VerChor
 =======
 
-Framework for the Verification of Choreographies
-
-VerChor is an ongoing work. It is concerned about refactoring in Java the [VerChor tool](http://pagesperso-systeme.lip6.fr/Pascal.Poizat/VerChor/) written in Python.
+VerChor is a framework for the verification of choreographies.
+It is concerned about refactoring in Java the [VerChor tool](http://pagesperso-systeme.lip6.fr/Pascal.Poizat/VerChor/) written in Python.
 
 Contributors
 ============
@@ -13,8 +12,8 @@ Contributors
 - Gwen Salaün, ENSIMAG, Grenoble INP
 - Lina Ye
 
-Required Libraries
-==================
+Dependencies
+============
 
 VerChor relies on:
 
