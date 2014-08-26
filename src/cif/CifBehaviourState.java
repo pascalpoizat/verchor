@@ -1,3 +1,23 @@
+/**
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * verchor
+ * Copyright (C) 2014 Pascal Poizat (@pascalpoizat)
+ * emails: pascal.poizat@lip6.fr
+ */
+
 package cif;
 
 import base.*;
@@ -9,9 +29,6 @@ import models.choreography.cif.generated.SeveralSuccState;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by pascalpoizat on 06/02/2014.
- */
 public class CifBehaviourState implements State {
 
     // adapted
@@ -26,8 +43,8 @@ public class CifBehaviourState implements State {
         this.state = state;
         this.id = new StateId(state.getStateID());
         initializeSuccessorIds();
-        this.incomingTransitions = new ArrayList<Transition>();
-        this.outgoingTransitions = new ArrayList<Transition>();
+        this.incomingTransitions = new ArrayList<>();
+        this.outgoingTransitions = new ArrayList<>();
     }
 
     @Override
@@ -49,7 +66,7 @@ public class CifBehaviourState implements State {
     }
 
     private void initializeSuccessorIds() {
-        successorIds = new ArrayList<StateId>();
+        successorIds = new ArrayList<>();
         if (getStateClass().equals(OneSuccState.class)) {
             OneSuccState source = (OneSuccState) state;
             successorIds.add(new StateId(source.getSuccessors().get(0)));

@@ -1,3 +1,23 @@
+/**
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * verchor
+ * Copyright (C) 2014 Pascal Poizat (@pascalpoizat)
+ * emails: pascal.poizat@lip6.fr
+ */
+
 package cif;
 
 import base.*;
@@ -6,7 +26,6 @@ import models.choreography.cif.CifModel;
 import models.choreography.cif.generated.StateMachine;
 import models.choreography.cif.generated.BaseState;
 import models.choreography.cif.generated.FinalState;
-import base.Message;
 
 import java.util.Set;
 import java.util.List;
@@ -17,9 +36,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
-/**
- * Created by pascalpoizat on 06/02/2014.
- */
 public class CifBehaviour implements Behaviour {
 
     // own data
@@ -32,10 +48,10 @@ public class CifBehaviour implements Behaviour {
     private StateMachine stateMachine;
 
     public CifBehaviour(CifModel model, HashMap<MessageId, Message> messages, HashMap<PeerId, Peer> peers) {
-        states = new HashMap<StateId, CifBehaviourState>();
+        states = new HashMap<>();
         initialState = null;
-        finalStates = new HashMap<StateId, CifBehaviourState>();
-        alphabet = new LinkedHashSet<AlphabetElement>(); // we use a set that is ordered by insertion
+        finalStates = new HashMap<>();
+        alphabet = new LinkedHashSet<>(); // we use a set that is ordered by insertion
         try {
             // try to get the model and state machine
             this.model = model;
@@ -65,7 +81,7 @@ public class CifBehaviour implements Behaviour {
                 models.choreography.cif.generated.Message m = (models.choreography.cif.generated.Message) o;
                 cifMessage = (CifMessageAdaptor) messages.get(new MessageId(m.getMsgID()));
                 peer = (CifPeer) peers.get(new PeerId(m.getSender()));
-                receivers = new HashSet<Peer>();
+                receivers = new HashSet<>();
                 // for the time being, only 1 receiver in CIF
                 receiver = (CifPeer) peers.get(new PeerId(m.getReceiver()));
                 receivers.add(receiver);
@@ -82,7 +98,7 @@ public class CifBehaviour implements Behaviour {
         // set initial state
         initialState = states.get(new StateId(stateMachine.getInitial().getStateID()));
         // set final states
-        finalStates = new HashMap<StateId, CifBehaviourState>();
+        finalStates = new HashMap<>();
         for (FinalState finalState : stateMachine.getFinal()) {
             state = states.get(new StateId(finalState.getStateID()));
             finalStates.put(state.getId(), state);
@@ -96,8 +112,8 @@ public class CifBehaviour implements Behaviour {
         CifBehaviourState target;
         CifBehaviourTransition transition;
         // we suppose that the CIF model is fully connected (all states are reachable from the initial state)
-        List<StateId> visitedStates = new ArrayList<StateId>();
-        Queue<StateId> statesStillToVisit = new LinkedList<StateId>();
+        List<StateId> visitedStates = new ArrayList<>();
+        Queue<StateId> statesStillToVisit = new LinkedList<>();
         StateId stateId;
         statesStillToVisit.add(initialState.getId());
         while (!statesStillToVisit.isEmpty()) {
@@ -118,7 +134,7 @@ public class CifBehaviour implements Behaviour {
 
     private void buildStateAdapters() {
         CifBehaviourState state;
-        states = new HashMap<StateId, CifBehaviourState>();
+        states = new HashMap<>();
         // for the time being, CIF generated classes generate separately initial, final, and all other states
         // we then have to treat the 3 separately
         // 1- initial state
