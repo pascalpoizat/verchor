@@ -80,12 +80,15 @@ public class Checker {
     // own data
     private boolean verbose;
     private String name;
+    private Map<String, String> parallelMerges;
     // model
     private Choreography choreography;
 
     public Checker(Choreography choreography) throws IllegalResourceException {
         this.choreography = choreography;
+        this.parallelMerges = new HashMap<>();
         setupStrings();
+        // note : name is initialized by setupString()
         // note : computeSyncSets() is called when loading the choreography
     }
 
@@ -266,7 +269,7 @@ public class Checker {
      * @param succ
      * @param semic
      */
-    public static String dumpSucc(List<AlphabetElement> alpha, List<State> succ, boolean semic, List<String> syncSet) {
+    public String dumpSucc(List<AlphabetElement> alpha, List<State> succ, boolean semic, List<String> syncSet) {
         String rtr = "";
         List<AlphabetElement> alphaSync;
         if (succ.size() > 1) {
@@ -281,7 +284,7 @@ public class Checker {
             } else if (abstractState instanceof SubsetJoinState) {
                 rtr += (" " + synchronous_prefix + abstractState.getId() + ";null\n");
             } else if ((abstractState instanceof AllSelectState) || (abstractState instanceof SubsetSelectState)) {
-                if (abstractState.getChoreography().splitInOtherSplitCone((GatewaySplitState)abstractState)) {
+                if (splitInOtherSplitCone((GatewaySplitState)abstractState)) {
                     rtr += (abstractState.getId() + " [");
                 } else {
                     rtr += (split_prefix + abstractState.getId() + " [");
@@ -904,5 +907,83 @@ public class Checker {
                         .filter(e1 -> (e1.getFirst().equals(sourceState) && !visitedStates.contains(e1.getSecond()) && !isSynchroMerge(e1.getSecond())))
                         .anyMatch(e2 -> successorNoMergeBetween(e2.getSecond(), targetState, edges, visitedStates))));
     }
+
+    /**
+     * performs a simple faulty check
+     * all interaction states directly following a choice state should have the same initiator
+     * TODO could be simplified and should be tested
+     *
+     * @return
+     */
+    public boolean simpleFaultyP() {
+        return getChoreography().getStates().stream()
+                .filter(state -> state instanceof ChoiceState)
+                .allMatch(choiceState -> {
+                    Set<State> interactionStates = choiceState.getSuccessors().stream()
+                            .filter(s -> s instanceof InteractionState)
+                            .collect(Collectors.toSet());
+                    if (!interactionStates.isEmpty()) {
+                        boolean result = true;
+                        String initiator;
+                        initiator = ((InteractionState) interactionStates.iterator().next()).getInitiator();
+                        for (State interactionState : interactionStates) {
+                            result = result && (((InteractionState) interactionState).getInitiator().equals(initiator));
+                        }
+                        return !result;
+                    } else {
+                        return true;
+                    }
+                });
+    }
+
+    public boolean splitInOtherSplitCone(GatewaySplitState splitState) {
+        List<State> filteredStates;
+        if (splitState instanceof refactoring_from_python.statemachine.AllSelectState) {
+            filteredStates = getChoreography().getStates().stream()
+                    .filter(state -> (!state.equals(splitState) && (state instanceof AllSelectState)))
+                    .collect(Collectors.toList());
+        } else if (splitState instanceof SubsetSelectState) {
+            filteredStates = getChoreography().getStates().stream()
+                    .filter(state -> (!state.equals(splitState) && (state instanceof SubsetSelectState)))
+                    .collect(Collectors.toList());
+        } else {
+            filteredStates = getChoreography().getStates().stream()
+                    .filter(state -> (!state.equals(splitState) && Checker.isSynchroSelect(state)))
+                    .collect(Collectors.toList());
+        }
+        return filteredStates.stream().anyMatch(state -> ((GatewaySplitState) state).getConeSet().contains(splitState));
+    }
+
+    public void computeSyncSets() {
+        Set<Couple<State, State>> edgeSet = getChoreography().getInitialState().getEdges(new HashSet<>());
+        for (State s : getChoreography().getStates()) {
+            if (Checker.isSynchroSelect(s)) {
+                Set<State> coneSet = ((GatewaySplitState) s).computeConeSet(edgeSet, getChoreography().getStates());
+                ((GatewaySplitState) s).setConeSet(coneSet);
+            }
+        }
+        List<State> splitStates = getChoreography().getStates().stream()
+                .filter(state -> Checker.isSynchroSelect(state))
+                .collect(Collectors.toList());
+        List<State> mergeStates = getChoreography().getStates().stream()
+                .filter(state -> Checker.isSynchroMerge(state))
+                .collect(Collectors.toList());
+        for (State mergeState : mergeStates) {
+            mergeState.getSyncSet().add(mergeState);
+            for (State splitState : splitStates) {
+                Set<State> cone = ((GatewaySplitState)splitState).getConeSet();
+                for (State s : getChoreography().getStates()) {
+                    if ((cone.contains(mergeState)) && (cone.contains(s))) {
+                        if (Checker.successorNoMergeBetween(s, mergeState, edgeSet, new HashSet<>())) {
+                            s.getSyncSet().add(mergeState);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+
 
 }

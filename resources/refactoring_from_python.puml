@@ -71,7 +71,29 @@ class Couple<X,Y> {
 }
 
 class Choreography {
+.. constructors ..
++ Choreography()
++ Choreography(String name)
+.. getters ..
++ String getName()
++ Set<State> getStates()
++ State getInitialState()
++ List<String> getPeers()
++ List<AlphabetElement> getAlphabet()
+.. mutators ..
++ void cleanUp()
+.. public methods ..
++ void buildChoreoFromFile(String filename) throws IllegalResourceException, IOException, IllegalModelException
++ void buildChoreoFromRawModel(models.choreography.cif.generated.Choreography rawCifModel) throws IllegalModelException
+.. private methods ..
+- void setupRawPeers()
+- void setupRawMessages()
+- boolean addState(State state) throws IllegalModelException
+- void computeAlphabet()
+- void buildStateFromRawModel(BaseState rawState, Map<String, State> stateMap, Map<String, List<String>> successors) throws IllegalModelException
 }
+
+AlphabetElement <.. Choreography
 
 class MessageFlow {
 .. constructors ..

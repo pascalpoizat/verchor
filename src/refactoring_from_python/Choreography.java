@@ -105,6 +105,88 @@ public class Choreography extends AbstractModel {
     }
 
     /**
+     * pure refactoring of the python method - due to the difference between the CIF JAXB-generated API and the python CIF API
+     * hence, we have 3 related classes:
+     * - models.choreography.cif.generated.Choreography (JAXB-generated API)
+     * - models.choreography.cif.CifModel (FMT API, with its reader from .cif file: CifCifReader)
+     * - this class, refactoring_from_python.Choreography (Python-like API, with its reader from .cif file: CifChoreographyReader)
+     * TODO this method will be useless in the future, use the FMT API
+     * 1- AbstractModel c = new Choreography();
+     * 2- c.setResource(new File
+     *
+     * @param filename
+     */
+    public void buildChoreoFromFile(String filename) throws IllegalResourceException, IOException, IllegalModelException {
+        cleanUp();
+        setResource(new File(filename));
+        modelFromFile(new CifChoreographyReader());
+    }
+
+    public void buildChoreoFromRawModel(models.choreography.cif.generated.Choreography rawCifModel) throws IllegalModelException {
+        raw = rawCifModel;
+        setupRawPeers();
+        setupRawMessages();
+        //
+        name = rawCifModel.getChoreoID();
+        StateMachine stateMachine = rawCifModel.getStateMachine();
+        // variables used in step 1 to keep information used in step 2
+        Map<String, State> stateMap = new HashMap<>();          // state id -> State
+        Map<String, List<String>> successors = new HashMap<>(); // state id -> state ids of the successors
+        // step 1 : state creation
+        buildStateFromRawModel(stateMachine.getInitial(), stateMap, successors);
+        for (BaseState finalState : stateMachine.getFinal()) {
+            buildStateFromRawModel(finalState, stateMap, successors);
+        }
+        for (BaseState intermediaryState : stateMachine.getInteractionOrInternalActionOrSubsetJoin()) {
+            buildStateFromRawModel(intermediaryState, stateMap, successors);
+        }
+        // step 2 : relation with the successors
+        for (State state : states) {
+            for (String successorId : successors.get(state.getId())) {
+                state.addSuccessor(stateMap.get(successorId));
+            }
+        }
+        // step 3 : set up derived attributes
+        computeAlphabet();
+    }
+
+    @Override
+    public void cleanUp() {
+        this.name = "";
+        this.states = new HashSet<>();
+        this.initialState = null;
+        this.peers = new ArrayList<>();
+        this.alphabet = new ArrayList<>();
+        this.raw = null;
+        this.raw_messages = null;
+        this.raw_peers = null;
+        super.cleanUp();
+    }
+
+    /**
+     * sets up the declared peers from the raw model
+     */
+    private void setupRawPeers() {
+        raw_peers = new HashMap<>();
+        raw.getParticipants().getPeer().stream()
+                .forEach(peer -> {
+                    raw_peers.put(peer.getPeerID(), peer);
+                });
+    }
+
+    /**
+     * sets up the declared messages from the raw model
+     */
+    private void setupRawMessages() {
+        raw_messages = new HashMap<>();
+        raw.getAlphabet().getMessageOrAction().stream()
+                .filter(message -> message instanceof Message)
+                .forEach(message -> {
+                    raw_messages.put(((Message) message).getMsgID(), (Message) message);
+                });
+    }
+
+    /**
      * add a state to the choreography
      * TODO bad pattern
      *
@@ -137,108 +219,6 @@ public class Choreography extends AbstractModel {
         }
         alphabet.clear();
         alphabet = Checker.removeDoubles(newAlphabet, newAlphabet);
-    }
-
-    /**
-     * performs a simple faulty check
-     * all interaction states directly following a choice state should have the same initiator
-     * TODO could be simplified and should be tested
-     *
-     * @return
-     */
-    public boolean simpleFaultyP() {
-        return getStates().stream()
-                .filter(state -> state instanceof ChoiceState)
-                .allMatch(choiceState -> {
-                    Set<State> interactionStates = choiceState.getSuccessors().stream()
-                            .filter(s -> s instanceof InteractionState)
-                            .collect(Collectors.toSet());
-                    if (!interactionStates.isEmpty()) {
-                        boolean result = true;
-                        String initiator;
-                        initiator = ((InteractionState) interactionStates.iterator().next()).getInitiator();
-                        for (State interactionState : interactionStates) {
-                            result = result && (((InteractionState) interactionState).getInitiator().equals(initiator));
-                        }
-                        return !result;
-                    } else {
-                        return true;
-                    }
-                });
-    }
-
-    /**
-     * pure refactoring of the python method - due to the difference between the CIF JAXB-generated API and the python CIF API
-     * hence, we have 3 related classes:
-     * - models.choreography.cif.generated.Choreography (JAXB-generated API)
-     * - models.choreography.cif.CifModel (FMT API, with its reader from .cif file: CifCifReader)
-     * - this class, refactoring_from_python.Choreography (Python-like API, with its reader from .cif file: CifChoreographyReader)
-     * TODO this method will be useless in the future, use the FMT API
-     * 1- AbstractModel c = new Choreography();
-     * 2- c.setResource(new File
-     *
-     * @param filename
-     */
-    public void buildChoreoFromFile(String filename) throws IllegalResourceException, IOException, IllegalModelException {
-        cleanUp();
-        setResource(new File(filename));
-        modelFromFile(new CifChoreographyReader());
-    }
-
-    public void setup() {
-        setupRawPeers();
-        setupRawMessages();
-    }
-
-    /**
-     * sets up the declared peers from the raw model
-     */
-    public void setupRawPeers() {
-        raw_peers = new HashMap<>();
-        raw.getParticipants().getPeer().stream()
-                .forEach(peer -> {
-                    raw_peers.put(peer.getPeerID(), peer);
-                });
-    }
-
-    /**
-     * sets up the declared messages from the raw model
-     */
-    public void setupRawMessages() {
-        raw_messages = new HashMap<>();
-        raw.getAlphabet().getMessageOrAction().stream()
-                .filter(message -> message instanceof Message)
-                .forEach(message -> {
-                    raw_messages.put(((Message) message).getMsgID(), (Message) message);
-                });
-    }
-
-    public void buildChoreoFromRawModel(models.choreography.cif.generated.Choreography rawCifModel) throws IllegalModelException {
-        raw = rawCifModel;
-        setup();
-        //
-        name = rawCifModel.getChoreoID();
-        StateMachine stateMachine = rawCifModel.getStateMachine();
-        // variables used in step 1 to keep information used in step 2
-        Map<String, State> stateMap = new HashMap<>();          // state id -> State
-        Map<String, List<String>> successors = new HashMap<>(); // state id -> state ids of the successors
-        // step 1 : state creation
-        buildStateFromRawModel(stateMachine.getInitial(), stateMap, successors);
-        for (BaseState finalState : stateMachine.getFinal()) {
-            buildStateFromRawModel(finalState, stateMap, successors);
-        }
-        for (BaseState intermediaryState : stateMachine.getInteractionOrInternalActionOrSubsetJoin()) {
-            buildStateFromRawModel(intermediaryState, stateMap, successors);
-        }
-        // step 2 : relation with the successors
-        for (State state : states) {
-            for (String successorId : successors.get(state.getId())) {
-                state.addSuccessor(stateMap.get(successorId));
-            }
-        }
-        // step 3 : set up derived attributes
-        computeAlphabet();
-        computeSyncSets();
     }
 
     /**
@@ -303,66 +283,6 @@ public class Choreography extends AbstractModel {
         boolean addResult = addState(state);
         if (!addResult) {
             throw new IllegalModelException(String.format("Duplicate state id %s.", id));
-        }
-    }
-
-    @Override
-    public void cleanUp() {
-        this.name = "";
-        this.states = new HashSet<>();
-        this.initialState = null;
-        this.peers = new ArrayList<>();
-        this.alphabet = new ArrayList<>();
-        this.raw = null;
-        this.raw_messages = null;
-        this.raw_peers = null;
-        super.cleanUp();
-    }
-
-    public boolean splitInOtherSplitCone(GatewaySplitState splitState) {
-        List<State> filteredStates;
-        if (splitState instanceof refactoring_from_python.statemachine.AllSelectState) {
-            filteredStates = getStates().stream()
-                    .filter(state -> (!state.equals(splitState) && (state instanceof AllSelectState)))
-                    .collect(Collectors.toList());
-        } else if (splitState instanceof SubsetSelectState) {
-            filteredStates = getStates().stream()
-                    .filter(state -> (!state.equals(splitState) && (state instanceof SubsetSelectState)))
-                    .collect(Collectors.toList());
-        } else {
-            filteredStates = getStates().stream()
-                    .filter(state -> (!state.equals(splitState) && Checker.isSynchroSelect(state)))
-                    .collect(Collectors.toList());
-        }
-        return filteredStates.stream().anyMatch(state -> ((GatewaySplitState) state).getConeSet().contains(splitState));
-    }
-
-    public void computeSyncSets() {
-        Set<Couple<State, State>> edgeSet = getInitialState().getEdges(new HashSet<>());
-        for (State s : getStates()) {
-            if (Checker.isSynchroSelect(s)) {
-                Set<State> coneSet = ((GatewaySplitState) s).computeConeSet(edgeSet, getStates());
-                ((GatewaySplitState) s).setConeSet(coneSet);
-            }
-        }
-        List<State> splitStates = getStates().stream()
-                .filter(state -> Checker.isSynchroSelect(state))
-                .collect(Collectors.toList());
-        List<State> mergeStates = getStates().stream()
-                .filter(state -> Checker.isSynchroMerge(state))
-                .collect(Collectors.toList());
-        for (State mergeState : mergeStates) {
-            mergeState.getSyncSet().add(mergeState);
-            for (State splitState : splitStates) {
-                Set<State> cone = ((GatewaySplitState)splitState).getConeSet();
-                for (State s : getStates()) {
-                    if ((cone.contains(mergeState)) && (cone.contains(s))) {
-                        if (Checker.successorNoMergeBetween(s, mergeState, edgeSet, new HashSet<>())) {
-                            s.getSyncSet().add(mergeState);
-                        }
-                    }
-                }
-            }
         }
     }
 
