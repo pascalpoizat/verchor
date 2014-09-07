@@ -18,7 +18,7 @@
  * emails: pascal.poizat@lip6.fr
  */
 
-package refactoring_from_python;
+package refactoring_from_python.verification.helpers;
 
 public class Couple<X, Y> {
 

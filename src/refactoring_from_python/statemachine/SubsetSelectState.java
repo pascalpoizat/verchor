@@ -23,8 +23,9 @@ package refactoring_from_python.statemachine;
 
 import models.base.IllegalModelException;
 import refactoring_from_python.AlphabetElement;
-import refactoring_from_python.Checker;
-import refactoring_from_python.Couple;
+import refactoring_from_python.verification.Checker;
+import refactoring_from_python.verification.helpers.Collections;
+import refactoring_from_python.verification.helpers.Couple;
 import refactoring_from_python.StringAlphabetElement;
 
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class SubsetSelectState extends GatewaySplitState {
     public List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth) {
         List<Couple<String, Integer>> rtr;
         rtr = new ArrayList<>();
-        if (!Checker.isInList(getId(), visited)) {
+        if (!Collections.isInList(getId(), visited)) {
             List<String> visited2 = new ArrayList<>();
             visited2.add(getId());
             visited2.addAll(visited);
@@ -59,7 +60,7 @@ public class SubsetSelectState extends GatewaySplitState {
 
     // TODO SHOULD STRONGLY BE CHECKED, PYTHON CODE WAS VERY ILLEGIBLE
     @Override
-    public String lnt(List<AlphabetElement> alphabet) throws IllegalModelException {
+    public String visit_lnt(Checker checker, List<AlphabetElement> alphabet) throws IllegalModelException {
         // loop over all successors e.g. A,B,C (and default)
         // generate processes of the form:
         // sync ->     A || (B [] sync; null || C [] sync; null)

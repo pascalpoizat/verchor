@@ -21,8 +21,9 @@
 
 package refactoring_from_python.statemachine;
 
-import refactoring_from_python.Checker;
-import refactoring_from_python.Couple;
+import refactoring_from_python.verification.Checker;
+import refactoring_from_python.verification.helpers.Collections;
+import refactoring_from_python.verification.helpers.Couple;
 import refactoring_from_python.MessageFlow;
 
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public abstract class GatewayMergeState extends GatewayState {
      */
     @Override
     public List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth) {
-        if(Checker.isInList(getId(), visited)) {
+        if(Collections.isInList(getId(), visited)) {
             return new ArrayList<>();
         }
         else {
@@ -71,7 +72,7 @@ public abstract class GatewayMergeState extends GatewayState {
      */
     @Override
     public List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth) {
-        if(Checker.isInList(getId(), visited)) {
+        if(Collections.isInList(getId(), visited)) {
             return new ArrayList<>();
         }
         else {

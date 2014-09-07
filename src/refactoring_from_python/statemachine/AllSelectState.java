@@ -22,8 +22,9 @@
 package refactoring_from_python.statemachine;
 
 import refactoring_from_python.AlphabetElement;
-import refactoring_from_python.Checker;
-import refactoring_from_python.Couple;
+import refactoring_from_python.verification.Checker;
+import refactoring_from_python.verification.helpers.Collections;
+import refactoring_from_python.verification.helpers.Couple;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,7 +41,7 @@ public class AllSelectState extends GatewaySplitState {
     }
 
     @Override
-    public String lnt(List<AlphabetElement> alphabet) {
+    public String visit_lnt(Checker checker, List<AlphabetElement> alphabet) {
         return computeSetParallelComposition(getSuccessors(), alphabet);
     }
 
@@ -48,7 +49,7 @@ public class AllSelectState extends GatewaySplitState {
     public List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth) {
         List<Couple<String, Integer>> rtr;
         rtr = new ArrayList<>();
-        if (!Checker.isInList(getId(), visited)) {
+        if (!Collections.isInList(getId(), visited)) {
             List<String> visited2 = new ArrayList<>();
             visited2.add(getId());
             for (State successor : getSuccessors()) {

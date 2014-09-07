@@ -22,6 +22,9 @@
 package refactoring_from_python.statemachine;
 
 import refactoring_from_python.*;
+import refactoring_from_python.verification.Checker;
+import refactoring_from_python.verification.helpers.Collections;
+import refactoring_from_python.verification.helpers.Couple;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -64,7 +67,7 @@ public abstract class GatewaySplitState extends GatewayState {
      */
     @Override
     public List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth) {
-        if (Checker.isInList(getId(), visited)) {
+        if (Collections.isInList(getId(), visited)) {
             return new ArrayList<>();
         } else {
             List<Couple<String, Integer>> rtr = new ArrayList<>();
@@ -87,7 +90,7 @@ public abstract class GatewaySplitState extends GatewayState {
      */
     @Override
     public List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth) {
-        if (Checker.isInList(getId(), visited)) {
+        if (Collections.isInList(getId(), visited)) {
             return new ArrayList<>();
         } else {
             List<Couple<String, Integer>> rtr = new ArrayList<>();

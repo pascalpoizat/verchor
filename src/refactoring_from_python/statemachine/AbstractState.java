@@ -23,7 +23,7 @@ package refactoring_from_python.statemachine;
 
 import refactoring_from_python.AlphabetElement;
 import refactoring_from_python.Choreography;
-import refactoring_from_python.Couple;
+import refactoring_from_python.verification.helpers.Couple;
 import refactoring_from_python.MessageFlow;
 
 import java.util.ArrayList;

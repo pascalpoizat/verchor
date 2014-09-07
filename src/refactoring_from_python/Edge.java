@@ -21,6 +21,7 @@
 package refactoring_from_python;
 
 import refactoring_from_python.statemachine.State;
+import refactoring_from_python.verification.helpers.Couple;
 
 /**
  * Edge between two states

@@ -22,8 +22,9 @@
 package refactoring_from_python.statemachine;
 
 import refactoring_from_python.AlphabetElement;
-import refactoring_from_python.Checker;
-import refactoring_from_python.Couple;
+import refactoring_from_python.verification.Checker;
+import refactoring_from_python.verification.helpers.Collections;
+import refactoring_from_python.verification.helpers.Couple;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,11 +41,11 @@ public class SubsetJoinState extends GatewayMergeState {
     }
 
     @Override
-    public String lnt(List<AlphabetElement> alphabet) {
+    public String visit_lnt(Checker checker, List<AlphabetElement> alphabet) {
         String rtr = "";
         rtr += String.format("%s%s;", Checker.synchronous_prefix, getId());
         if (!Checker.isSynchroMerge(getSuccessors().get(0))){
-            rtr += Checker.dumpSucc(alphabet, getSuccessors(), false, new ArrayList<>());
+            rtr += checker.dumpSucc(alphabet, getSuccessors(), false, new ArrayList<>());
         }
         else {
             rtr += " null\n";
@@ -56,7 +57,7 @@ public class SubsetJoinState extends GatewayMergeState {
     public List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth) {
         List<Couple<String, Integer>> rtr;
         rtr = new ArrayList<>();
-        if (!Checker.isInList(getId(), visited)) {
+        if (!Collections.isInList(getId(), visited)) {
             List<String> visited2 = new ArrayList<>();
             visited2.addAll(visited);
             visited2.add(getId());

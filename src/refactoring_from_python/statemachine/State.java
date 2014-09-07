@@ -24,7 +24,8 @@ package refactoring_from_python.statemachine;
 import models.base.IllegalModelException;
 import refactoring_from_python.AlphabetElement;
 import refactoring_from_python.Choreography;
-import refactoring_from_python.Couple;
+import refactoring_from_python.verification.Checker;
+import refactoring_from_python.verification.helpers.Couple;
 import refactoring_from_python.MessageFlow;
 
 import java.util.List;
@@ -152,6 +153,6 @@ public interface State {
     public List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth);
     public List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth);
 
-    public String lnt(List<AlphabetElement> alphabet) throws IllegalModelException;
+    public String visit_lnt(Checker checker, List<AlphabetElement> alphabet) throws IllegalModelException;
 
 }

@@ -53,4 +53,11 @@ public class StringAlphabetElement implements AlphabetElement {
 
     @Override
     public String toString() { return value; }
+
+    public String getValue() { return value; }
+
+    @Override
+    public boolean concernsPeer(String peerId) {
+        return false;
+    }
 }

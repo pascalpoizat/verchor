@@ -23,9 +23,10 @@ package refactoring_from_python.statemachine;
 
 import models.base.IllegalModelException;
 import refactoring_from_python.AlphabetElement;
-import refactoring_from_python.Checker;
+import refactoring_from_python.verification.Checker;
 import refactoring_from_python.ChoreographyAlphabetElement;
 import refactoring_from_python.MessageFlow;
+import refactoring_from_python.verification.helpers.Collections;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -123,7 +124,7 @@ public class InteractionState extends IntermediateState {
      */
     @Override
     public List reachableParallelMerge(List<String> visited, int depth) {
-        if (Checker.isInList(getId(), visited)) {
+        if (Collections.isInList(getId(), visited)) {
             return new ArrayList<>();
         } else {
             List<String> visited2 = new ArrayList<>();
@@ -142,7 +143,7 @@ public class InteractionState extends IntermediateState {
      */
     @Override
     public List reachableInclusiveMerge(List<String> visited, int depth) {
-        if (Checker.isInList(getId(), visited)) {
+        if (Collections.isInList(getId(), visited)) {
             return new ArrayList<>();
         } else {
             List<String> visited2 = new ArrayList<>();
@@ -153,11 +154,11 @@ public class InteractionState extends IntermediateState {
     }
 
     @Override
-    public String lnt(List<AlphabetElement> alpha) {
+    public String visit_lnt(Checker checker, List<AlphabetElement> alpha) {
         String rtr = "";
         rtr += dumpMessage();
         List<String> alphaSync = getSyncSet().stream().map(x -> x.getId()).collect(Collectors.toList());
-        rtr += Checker.dumpSucc(alpha, getSuccessors(), true, alphaSync);
+        rtr += checker.dumpSucc(alpha, getSuccessors(), true, alphaSync);
         return rtr;
     }
 

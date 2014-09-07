@@ -108,4 +108,8 @@ public class ChoreographyAlphabetElement implements AlphabetElement {
         return this.toString().compareTo(o.toString());
     }
 
+    @Override
+    public boolean concernsPeer(String peerId) {
+        return (peerId.equals(getInitiatingPeer())|| peerId.equals(getPartnerPeer()));
+    }
 }

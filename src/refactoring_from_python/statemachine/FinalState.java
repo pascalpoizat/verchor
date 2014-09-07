@@ -22,7 +22,8 @@
 package refactoring_from_python.statemachine;
 
 import refactoring_from_python.AlphabetElement;
-import refactoring_from_python.Couple;
+import refactoring_from_python.verification.Checker;
+import refactoring_from_python.verification.helpers.Couple;
 import refactoring_from_python.MessageFlow;
 
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public class FinalState extends AbstractState {
     }
 
     @Override
-    public String lnt(List<AlphabetElement> alpha) {
+    public String visit_lnt(Checker checker, List<AlphabetElement> alpha) {
         return "null\n";
     }
 

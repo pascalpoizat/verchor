@@ -19,11 +19,13 @@
  * emails: pascal.poizat@lip6.fr
  */
 
-package refactoring_from_python;
+package refactoring_from_python.verification;
 
 import models.base.IllegalModelException;
 import models.base.IllegalResourceException;
+import refactoring_from_python.*;
 import refactoring_from_python.statemachine.*;
+import refactoring_from_python.verification.helpers.Couple;
 
 import java.io.*;
 import java.util.*;
@@ -31,13 +33,14 @@ import java.util.stream.Collectors;
 
 // TODO check ArrayList vs HashSet vs LinkedHasSet for sets used in the approach
 
-public class Checker {
+public class Checker extends Tool {
 
     // prefixes / suffixes for generated file contents
     public static final String synchronous_prefix = "synchro_";
     public static final String split_prefix = "split_";
     public static final String any_suffix = ":any";
     public static final String reception_message_suffix = "_REC";
+    public static final String emission_message_suffix = "_EM";
     public static final String default_branch_state_name = "default";
     // file name parts
     public static final String synchronizability_suffix = "_synchronizability";
@@ -78,13 +81,13 @@ public class Checker {
     private File lnt_file;
 
     // own data
-    private boolean verbose;
     private String name;
     private Map<String, String> parallelMerges;
     // model
     private Choreography choreography;
 
     public Checker(Choreography choreography) throws IllegalResourceException {
+        super();
         this.choreography = choreography;
         this.parallelMerges = new HashMap<>();
         setupStrings();
@@ -94,28 +97,6 @@ public class Checker {
 
     public Choreography getChoreography() {
         return choreography;
-    }
-
-    public void setVerbose(boolean verbose) {
-        this.verbose = verbose;
-    }
-
-    public boolean isVerbose() {
-        return verbose;
-    }
-
-    public void message(String msg) {
-        if (this.verbose) {
-            System.out.println("" + msg);
-        }
-    }
-
-    public void error(String msg) {
-        System.out.println("ERROR: " + msg);
-    }
-
-    public void warning(String msg) {
-        System.out.println("WARNING: " + msg);
     }
 
     private void setupStrings() throws IllegalResourceException {
@@ -187,80 +168,6 @@ public class Checker {
     }
 
     /**
-     * checks wether a string belongs to a list
-     * TODO useless, remove and replace by native method
-     *
-     * @param elem
-     * @param l
-     * @return
-     */
-    public static boolean isInList(String elem, List<String> l) {
-        return (l.contains(elem));
-    }
-
-    /**
-     * checks whether a list is included in another list. Used only in buildChoreoFromFile to sort states
-     * TODO should be refactored to simplify
-     *
-     * @param src        list of state ids to look for
-     * @param dst        list of states
-     * @param successors list of states in dst that match ids in src
-     * @return indicator if successors is relevant or not
-     */
-    public static boolean hasSuccInList(List<String> src, List<State> dst, List<State> successors) {
-        boolean resGlob = true;
-        for (String succ : src) {
-            boolean resLoc = false;
-            for (State e : dst) {// e = instance of already encoded state
-                if (succ.equals(e.getId())) {
-                    successors.add(e);
-                    resLoc = true;
-                }
-            }
-            resGlob = resGlob && resLoc;
-        }
-        return resGlob;
-    }
-
-    /**
-     * filters a list of couples (string,depth) to keep only strings where depth is 0
-     *
-     * @param l list of couples (string,depth)
-     * @return the strings from l where the depth is 0
-     */
-    public static List<String> keepZeroDepthStrings(List<Couple<String, Integer>> l) {
-        List<String> res = l.stream()
-                .filter(couple -> couple.getSecond() == 0)
-                .map(Couple::getFirst)
-                .collect(Collectors.toList());
-        return res;
-    }
-
-    /**
-     * removes double occurences of strings in a list
-     * TODO should be refactored to simplify + useless ? it seems just to return l in the end (not removing multiple occurences in l !)
-     *
-     * @param l    list of string to check for
-     * @param full list of strings possibly with doubles
-     * @return
-     */
-    public static List<AlphabetElement> removeDoubles(List<AlphabetElement> l, List<AlphabetElement> full) {
-        List<AlphabetElement> single = new ArrayList<>();
-        List<AlphabetElement> dble = new ArrayList<>();
-        for (AlphabetElement name : l) {
-            if (full.stream().filter(e -> e.equals(name)).count() <= 1) {
-                single.add(name);
-            } else {
-                if (!dble.contains(name)) {
-                    dble.add(name);
-                }
-            }
-        }
-        single.addAll(dble);
-        return single;
-    }
-
-    /**
      * dumps a call to the successor state process
      * TODO should be refactored to remove System.out calls and to simplify (only succ[0] is used) and separate following toString/toStream pattern
      * TODO ISSUE SHOULDBETESTED wrt the use of sets / arrays
@@ -284,7 +191,7 @@ public class Checker {
             } else if (abstractState instanceof SubsetJoinState) {
                 rtr += (" " + synchronous_prefix + abstractState.getId() + ";null\n");
             } else if ((abstractState instanceof AllSelectState) || (abstractState instanceof SubsetSelectState)) {
-                if (splitInOtherSplitCone((GatewaySplitState)abstractState)) {
+                if (splitInOtherSplitCone((GatewaySplitState) abstractState)) {
                     rtr += (abstractState.getId() + " [");
                 } else {
                     rtr += (split_prefix + abstractState.getId() + " [");
@@ -484,96 +391,6 @@ public class Checker {
         return rtr;
     }
 
-    public void executeGenerateLts() throws ExecutionException {
-        execute(String.format(Checker.LTSGENERATION_COMMAND, getChoreography().getName()), true);
-    }
-
-    public boolean executeRealizabilityCheck() throws ExecutionException { // isRealizableP
-        execute(String.format(REALIZABILITYCHECK_COMMAND, getChoreography().getName()), true);
-        // check if a counter example has been generated
-        File f = new File(realizability_result_model);
-        if (f.exists()) {
-            if (isVerbose()) {
-                String debugInformation = execute(String.format(Checker.DEBUG_COMMAND, realizability_result_model), true);
-                message(debugInformation);
-            }
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    public boolean executeSynchronizabilityCheck() throws ExecutionException { // isSynchronizableP
-        execute(String.format(SYNCHRONIZABILITYCHECK_COMMAND, getChoreography().getName()), true);
-        // check if a counter example has been generated
-        File f = new File(synchronizability_result_model);
-        if (f.exists()) {
-            if (isVerbose()) {
-                String debugInformation = execute(String.format(Checker.DEBUG_COMMAND, synchronizability_result_model), true);
-                message(debugInformation);
-            }
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    public void executeCleanUp() throws ExecutionException {
-        execute(String.format(Checker.CLEAN_COMMAND, getChoreography().getName()), false);
-        executeCleanResults();
-    }
-
-    public void executeCleanResults() throws ExecutionException {
-        executeCleanSynchronizabilityResults();
-        executeCleanRealizabiltiyResults();
-    }
-
-    public void executeCleanSynchronizabilityResults() throws ExecutionException {
-        // removes files generated by the synchronizability check
-        execute(String.format(Checker.CLEAN_COMMAND, getChoreography().getName() + Checker.synchronizability_suffix), false);
-    }
-
-    public void executeCleanRealizabiltiyResults() throws ExecutionException {
-        // removes files generated by the realizability check
-        execute(String.format(Checker.CLEAN_COMMAND, getChoreography().getName() + Checker.realizability_suffix), false);
-    }
-
-    public String execute(String command, boolean withSuccess) throws ExecutionException {
-        // helper to execute an external command and return the results
-        // withSuccess = true requires that the command return an exit code different from 0
-        String rtr, line;
-        Process p;
-        BufferedReader outputs;
-        rtr = "";
-        try {
-            message("Executing ... " + command);
-            p = Runtime.getRuntime().exec(command, null, new File(userdir));
-            int exitCode = p.waitFor();
-            outputs = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            while ((line = outputs.readLine()) != null) {
-                rtr += line + "\n";
-            }
-            if (exitCode != 0) {
-                // something went wrong during the command execution (error generated by the command)
-                String errorMessage = String.format("Error in executing command %s (%d)\ntrace:\n%s", command, exitCode, rtr);
-                if (withSuccess) {
-                    throw new ExecutionException(errorMessage);
-                } else {
-                    if (isVerbose()) {
-                        warning(errorMessage);
-                    }
-                }
-            }
-        } catch (IOException | InterruptedException e) {
-            ExecutionException e2 = new ExecutionException("Error in executing command " + command);
-            e2.setStackTrace(e.getStackTrace());
-            error(e2.getMessage());
-        }
-        message(rtr);
-        return rtr;
-
-    }
-
     public boolean isRealizable() {
         boolean rtr = false;
         try {
@@ -646,7 +463,7 @@ public class Checker {
                 script += String.format("\"%s_peer_%s.bcg\" = safety reduction of tau*.a reduction of \"peer_%s [%s]\";\n\n", name, peer, peer,
                         Checker.generateAlphabet(choreography.getAlphabet(), false, false, false)); // ISSUE ENHANCEMENT use the table of reductions and static String formats
                 script += String.format("\"%s_apeer_%s.bcg\" = safety reduction of tau*.a reduction of \"apeer_%s [%s]\";\n\n", name, peer, peer,
-                        Checker.generateAlphabet(computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, choreography.getAlphabet())), false, false, false)); // ISSUE ENHANCEMENT use the table of reductions and static String formats // TODO ISSUE SHOULDBETESTED use only computeDirAlphabetForPeer() ?
+                        Checker.generateAlphabet(computeDirAlphabetforPeer(peer, computeAlphabetForPeer(choreography.getAlphabet(), peer)), false, false, false)); // ISSUE ENHANCEMENT use the table of reductions and static String formats // TODO ISSUE SHOULDBETESTED use only computeDirAlphabetForPeer() ?
             }
         }
         writeToFile(script, general_script);
@@ -657,7 +474,7 @@ public class Checker {
         // generate SVL file from a CIF model for choregraphy verification (synchronizability check)
         // synchronizability check (WWW 2011) using trace equivalence between the synchronous composition and the 1-bounded asynchronous composition
         // important : the signalChange() method should be called each time the CIF model changes (synchronization issue)
-        String script = String.format("\"%s\" = %s with %s \"%s\" ==  \"%s\";\n\n", synchronizability_result_model, Checker.synchronizability_equivalence, Checker.EQUIVALENCE_CHECKER_COMMAND, synchronous_composition_model, asynchronous_composition_model);
+        String script = String.format("\"%s\" = %s with %s \"%s\" ==  \"%s\";\n\n", synchronizability_result_model, Checker.synchronizability_equivalence, EQUIVALENCE_CHECKER_COMMAND, synchronous_composition_model, asynchronous_composition_model);
         message("synchronizability checked with: " + script);
         writeToFile(script, synchronizability_script);
     }
@@ -666,7 +483,7 @@ public class Checker {
         // generate SVL
         // equivalence between the choreography LTS and the distributed system LTS (async). Nb: here we only consider emissions in the distributed system
         // important : the signalChange() method should be called each time the CIF model changes (synchronization issue)
-        String script = String.format("\"%s\" = %s with %s \"%s\" ==  \"%s\";\n\n", realizability_result_model, Checker.realizability_equivalence, Checker.EQUIVALENCE_CHECKER_COMMAND, choreography_model, asynchronous_composition_model);
+        String script = String.format("\"%s\" = %s with %s \"%s\" ==  \"%s\";\n\n", realizability_result_model, Checker.realizability_equivalence, EQUIVALENCE_CHECKER_COMMAND, choreography_model, asynchronous_composition_model);
         message("realizability checked with: " + script);
         writeToFile(script, realizability_script);
     }
@@ -715,30 +532,47 @@ public class Checker {
         return rtr;
     }
 
-    // filters an alphabet to keep only the elements relative to a peer
-    // returns a new alphabet (possibly sharing alphabet elements with the original one)
-    // TODO check wrt Python
-    private List<AlphabetElement> computePeerAlphabetForPeer(String peer, List<AlphabetElement> alphabet) {
-        List<AlphabetElement> rtr = new ArrayList<>();
-        for (AlphabetElement alphabetElement : alphabet) {
-            if (alphabetElement instanceof ChoreographyAlphabetElement) {
-                ChoreographyAlphabetElement choreographyAlphabetElement = (ChoreographyAlphabetElement) alphabetElement;
-                if (choreographyAlphabetElement.getInitiatingPeer().equals(peer)) { // if peer is the sender of the alphabet element: keep the same alphabet element
-                    rtr.add(choreographyAlphabetElement);
-                } else
-                    for (String cifPeer : choreographyAlphabetElement.getParticipants()) { // if peer is one of the receivers of the alphabet element: compute a new alphabet element with specific tagged message
-                        if (cifPeer.equals(peer)) {
-                            rtr.add(choreographyAlphabetElement);
-                        }
-                    }
-            }
-        }
-        return rtr;
+    /**
+     * computes the subset of an alphabet for which a peer is involved
+     * python: alphaPeer(peerId, alphabet)
+     * A, p -> { x_y_R \in A st x=p \/ y=p }
+     * TODO check wrt python
+     *
+     * @param alphabet
+     * @return elements in alphabet in which peer is involved
+     * @parem peer
+     */
+    private List<AlphabetElement> computeAlphabetForPeer(List<AlphabetElement> alphabet, String peerId) {
+        return alphabet.stream()
+                .filter(a -> a.concernsPeer(peerId))
+                .collect(Collectors.toList());
     }
 
-    // computes an alphabet with both send/receive directions from a choreography alphabet
-    // TODO check wrt Python
-    private List<AlphabetElement> computeBothDirAlphabet(List<AlphabetElement> alphabet) throws IllegalModelException {
+    /**
+     * computes the subset of an alphabet for which a peer is not involved
+     * python: computeHidingActions(peerId, alphabet)
+     * A, p -> { x_y_R \in A st x!=p /\ y!=p }
+     * TODO check wrt python
+     *
+     * @param alphabet
+     * @return elements in alphabet in which peer is not involved
+     * @parem peer
+     */
+    private List<AlphabetElement> computeAlphabetNotForPeer(List<AlphabetElement> alphabet, String peerId) {
+        return alphabet.stream()
+                .filter(a -> !a.concernsPeer(peerId))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * computes alphabet elements with added send/receive suffixes from an alphabet
+     * python: alphaBothDir(alphabet)
+     * TODO check wrt python
+     *
+     * @param alphabet
+     * @return
+     */
+    private List<AlphabetElement> computeBothDirectionAlphabet(List<AlphabetElement> alphabet) throws IllegalModelException {
         List<AlphabetElement> rtr = new ArrayList<>();
         for (AlphabetElement alphabetElement : alphabet) {
             if (alphabetElement instanceof ChoreographyAlphabetElement) {
@@ -789,8 +623,8 @@ public class Checker {
         int i = 0;
         int nbPeers = peers.size();
         for (String peer : peers) {
-            peerAlphabet = computeDirAlphabetforPeer(peer, computePeerAlphabetForPeer(peer, alphabet));
-            peerBufferAlphabet = computeBothDirAlphabet(computeBufferAlphabetForPeer(peer, alphabet));
+            peerAlphabet = computeDirAlphabetforPeer(peer, computeAlphabetForPeer(alphabet, peer));
+            peerBufferAlphabet = computeBothDirectionAlphabet(computeBufferAlphabetForPeer(peer, alphabet));
             if (i < nbPeers - 1) {
                 rtr += "par ";
                 synchronizationAlphabet = computeSynchronizationAlphabet(peer, peers, alphabet);
@@ -837,10 +671,10 @@ public class Checker {
 
     // ...
     private List<AlphabetElement> computeSynchronizationAlphabet(String fromPeer, List<String> peers, List<AlphabetElement> alphabet) {
-        List<AlphabetElement> alphap = computePeerAlphabetForPeer(fromPeer, alphabet);
+        List<AlphabetElement> alphap = computeAlphabetForPeer(alphabet, fromPeer);
         List<AlphabetElement> alphas = new ArrayList<>();
         for (String k : peers) {
-            List<AlphabetElement> ak = computePeerAlphabetForPeer(k, alphabet);
+            List<AlphabetElement> ak = computeAlphabetForPeer(alphabet, k);
             alphas = union(alphas, ak);
         }
         return intersection(alphap, alphas);
@@ -971,7 +805,7 @@ public class Checker {
         for (State mergeState : mergeStates) {
             mergeState.getSyncSet().add(mergeState);
             for (State splitState : splitStates) {
-                Set<State> cone = ((GatewaySplitState)splitState).getConeSet();
+                Set<State> cone = ((GatewaySplitState) splitState).getConeSet();
                 for (State s : getChoreography().getStates()) {
                     if ((cone.contains(mergeState)) && (cone.contains(s))) {
                         if (Checker.successorNoMergeBetween(s, mergeState, edgeSet, new HashSet<>())) {
@@ -984,6 +818,95 @@ public class Checker {
     }
 
 
+    public String execute(String command, boolean withSuccess, String userdir) throws ExecutionException {
+        // helper to execute an external command and return the results
+        // withSuccess = true requires that the command return an exit code different from 0
+        String rtr, line;
+        Process p;
+        BufferedReader outputs;
+        rtr = "";
+        try {
+            message("Executing ... " + command);
+            p = Runtime.getRuntime().exec(command, null, new File(userdir));
+            int exitCode = p.waitFor();
+            outputs = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            while ((line = outputs.readLine()) != null) {
+                rtr += line + "\n";
+            }
+            if (exitCode != 0) {
+                // something went wrong during the command execution (error generated by the command)
+                String errorMessage = String.format("Error in executing command %s (%d)\ntrace:\n%s", command, exitCode, rtr);
+                if (withSuccess) {
+                    throw new ExecutionException(errorMessage);
+                } else {
+                    if (isVerbose()) {
+                        warning(errorMessage);
+                    }
+                }
+            }
+        } catch (IOException | InterruptedException e) {
+            ExecutionException e2 = new ExecutionException("Error in executing command " + command);
+            e2.setStackTrace(e.getStackTrace());
+            error(e2.getMessage());
+        }
+        message(rtr);
+        return rtr;
+
+    }
+
+    public void executeGenerateLts() throws ExecutionException {
+        execute(String.format(LTSGENERATION_COMMAND, name), true, userdir);
+    }
+
+    public boolean executeRealizabilityCheck() throws ExecutionException { // isRealizableP
+        execute(String.format(REALIZABILITYCHECK_COMMAND, name), true, userdir);
+        // check if a counter example has been generated
+        File f = new File(realizability_result_model);
+        if (f.exists()) {
+            if (isVerbose()) {
+                String debugInformation = execute(String.format(DEBUG_COMMAND, realizability_result_model), true, userdir);
+                message(debugInformation);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean executeSynchronizabilityCheck() throws ExecutionException { // isSynchronizableP
+        execute(String.format(SYNCHRONIZABILITYCHECK_COMMAND, name), true, userdir);
+        // check if a counter example has been generated
+        File f = new File(synchronizability_result_model);
+        if (f.exists()) {
+            if (isVerbose()) {
+                String debugInformation = execute(String.format(DEBUG_COMMAND, synchronizability_result_model), true, userdir);
+                message(debugInformation);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public void executeCleanUp() throws ExecutionException {
+        execute(String.format(CLEAN_COMMAND, name), false, userdir);
+        executeCleanResults();
+    }
+
+    public void executeCleanResults() throws ExecutionException {
+        executeCleanSynchronizabilityResults();
+        executeCleanRealizabiltiyResults();
+    }
+
+    public void executeCleanSynchronizabilityResults() throws ExecutionException {
+        // removes files generated by the synchronizability check
+        execute(String.format(CLEAN_COMMAND, name + synchronizability_suffix), false, userdir);
+    }
+
+    public void executeCleanRealizabiltiyResults() throws ExecutionException {
+        // removes files generated by the realizability check
+        execute(String.format(CLEAN_COMMAND, name + realizability_suffix), false, userdir);
+    }
 
 
 }

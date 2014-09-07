@@ -18,8 +18,35 @@
  * emails: pascal.poizat@lip6.fr
  */
 
-package refactoring_from_python;
+package refactoring_from_python.verification;
 
-public interface AlphabetElement extends Comparable<AlphabetElement> {
-    public boolean concernsPeer(String peerId);
+public abstract class Tool {
+    private boolean verbose;
+
+    public Tool() { this(false); }
+
+    public Tool(boolean verbose) { this.verbose = verbose; }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void message(String msg) {
+        if (verbose) {
+            System.out.println("" + msg);
+        }
+    }
+
+    public static void error(String msg) {
+        System.out.println("ERROR: " + msg);
+    }
+
+    public static void warning(String msg) {
+        System.out.println("WARNING: " + msg);
+    }
+
 }

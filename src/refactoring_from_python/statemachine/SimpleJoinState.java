@@ -22,7 +22,7 @@
 package refactoring_from_python.statemachine;
 
 import refactoring_from_python.AlphabetElement;
-import refactoring_from_python.Checker;
+import refactoring_from_python.verification.Checker;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,7 +39,7 @@ public class SimpleJoinState extends GatewayMergeState {
     }
 
     @Override
-    public String lnt(List<AlphabetElement> alphabet) {
-        return Checker.dumpSucc(alphabet, getSuccessors(), false, new ArrayList<>());
+    public String visit_lnt(Checker checker, List<AlphabetElement> alphabet) {
+        return checker.dumpSucc(alphabet, getSuccessors(), false, new ArrayList<>());
     }
 }

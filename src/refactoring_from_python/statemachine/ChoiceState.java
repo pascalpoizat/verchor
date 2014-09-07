@@ -22,7 +22,7 @@
 package refactoring_from_python.statemachine;
 
 import refactoring_from_python.AlphabetElement;
-import refactoring_from_python.Checker;
+import refactoring_from_python.verification.Checker;
 import refactoring_from_python.StringAlphabetElement;
 
 import java.util.ArrayList;
@@ -41,12 +41,12 @@ public class ChoiceState extends GatewaySplitState {
     }
 
     @Override
-    public String lnt(List<AlphabetElement> alphabet) {
+    public String visit_lnt(Checker checker, List<AlphabetElement> alphabet) {
         List<String> choices = new ArrayList<>();
         List<AlphabetElement> alphaSync;
         for (State successor : getSuccessors()) {
             String rtr = "";
-            if (Checker.isSynchroSelect(successor) && !getChoreography().splitInOtherSplitCone((GatewaySplitState)successor)) {
+            if (Checker.isSynchroSelect(successor) && !checker.splitInOtherSplitCone((GatewaySplitState)successor)) {
                 rtr += Checker.split_prefix;
                 alphaSync = getSyncSet().stream().map(x -> new StringAlphabetElement(x.getId())).collect(Collectors.toList());
             } else {

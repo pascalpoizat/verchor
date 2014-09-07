@@ -39,7 +39,6 @@ import refactoring_from_python.statemachine.SubsetSelectState;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Choreography extends AbstractModel {
 
@@ -218,7 +217,7 @@ public class Choreography extends AbstractModel {
             newAlphabet.addAll(state.getAlphabet());
         }
         alphabet.clear();
-        alphabet = Checker.removeDoubles(newAlphabet, newAlphabet);
+        alphabet = refactoring_from_python.verification.helpers.Collections.removeDoubles(newAlphabet, newAlphabet);
     }
 
     /**

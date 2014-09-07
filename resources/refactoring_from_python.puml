@@ -7,337 +7,379 @@ skinparam Note {
 
 package java.lang {
 
-class Comparable<T> {
-+ int compareTo(T o)
-}
+    class Comparable<T> {
+    + int compareTo(T o)
+    }
 
 }
 
 package refactoring_from_python {
 
-class AlphabetElement {
-}
+package model {
+
+    class AlphabetElement {
+    .. predicates ..
+    + boolean concernsPeer(String peerId)
+    }
 
 Comparable <|-down- AlphabetElement
 
-class StringAlphabetElement {
-.. constructors ..
-+ StringAlphabetElement(String value)
-.. @override (Object) ..
-+ boolean equals(Object o)
-+ int hashCode()
-+ String toString()
-.. @override (Comparable) ..
-+ int compareTo(AlphabetElement alphabetElement)
-}
+    class StringAlphabetElement {
+    .. constructors ..
+    + StringAlphabetElement(String value)
+    .. @override (Object) ..
+    + boolean equals(Object o)
+    + int hashCode()
+    + String toString()
+    .. @override (Comparable) ..
+    + int compareTo(AlphabetElement alphabetElement)
+    .. @override (AlphabetElement) ..
+    + boolean concernsPeer(String peerId)
+    .. getters ..
+    + String getValue()
+    }
 
-class ChoreographyAlphabetElement {
-.. constructors ..
-+ ChoreographyAlphabetElement(String message, List<String> participants, String initiatingPeer) throws IllegalModelException
-.. @override (Object) ..
-+ boolean equals(Object o)
-+ int hashCode()
-+ String toString()
-.. @override (Comparable) ..
-+ int compareTo(AlphabetElement alphabetElement)
-.. getters ..
-+ String getMessage()
-+ List<String> getParticipants()
-+ String getInitiatingPeer()
-.. private methods ..
-- String getPartnerPeer()
-}
+    class ChoreographyAlphabetElement {
+    .. constructors ..
+    + ChoreographyAlphabetElement(String message, List<String> participants, String initiatingPeer) throws IllegalModelException
+    .. @override (Object) ..
+    + boolean equals(Object o)
+    + int hashCode()
+    + String toString()
+    .. @override (Comparable) ..
+    + int compareTo(AlphabetElement alphabetElement)
+    .. @override (AlphabetElement) ..
+    + boolean concernsPeer(String peerId)
+    .. getters ..
+    + String getMessage()
+    + List<String> getParticipants()
+    + String getInitiatingPeer()
+    .. private methods ..
+    - String getPartnerPeer()
+    }
 
 AlphabetElement <|-- StringAlphabetElement
 AlphabetElement <|-- ChoreographyAlphabetElement
 
-class ExecutionException {
-.. constructors ..
-+ ExecutionException(String info)
-}
+    class ExecutionException {
+    .. constructors ..
+    + ExecutionException(String info)
+    }
 
-class Couple<X,Y> {
-.. constructors ..
-+ Couple(X first, Y second)
-.. @override (Object) ..
-+ boolean equals(Object o)
-+ int hashCode()
-.. getters ..
-+ X getFirst()
-+ Y getSecond()
-.. setters ..
-+ void setFirst(X first)
-+ void setSecond(Y second)
-}
-
-class Choreography {
-.. constructors ..
-+ Choreography()
-+ Choreography(String name)
-.. getters ..
-+ String getName()
-+ Set<State> getStates()
-+ State getInitialState()
-+ List<String> getPeers()
-+ List<AlphabetElement> getAlphabet()
-.. mutators ..
-+ void cleanUp()
-.. public methods ..
-+ void buildChoreoFromFile(String filename) throws IllegalResourceException, IOException, IllegalModelException
-+ void buildChoreoFromRawModel(models.choreography.cif.generated.Choreography rawCifModel) throws IllegalModelException
-.. private methods ..
-- void setupRawPeers()
-- void setupRawMessages()
-- boolean addState(State state) throws IllegalModelException
-- void computeAlphabet()
-- void buildStateFromRawModel(BaseState rawState, Map<String, State> stateMap, Map<String, List<String>> successors) throws IllegalModelException
-}
+    class Choreography {
+    .. constructors ..
+    + Choreography()
+    + Choreography(String name)
+    .. getters ..
+    + String getName()
+    + Set<State> getStates()
+    + State getInitialState()
+    + List<String> getPeers()
+    + List<AlphabetElement> getAlphabet()
+    .. mutators ..
+    + void cleanUp()
+    .. public methods ..
+    + void buildChoreoFromFile(String filename) throws IllegalResourceException, IOException, IllegalModelException
+    + void buildChoreoFromRawModel(models.choreography.cif.generated.Choreography rawCifModel) throws IllegalModelException
+    .. private methods ..
+    - void setupRawPeers()
+    - void setupRawMessages()
+    - boolean addState(State state) throws IllegalModelException
+    - void computeAlphabet()
+    - void buildStateFromRawModel(BaseState rawState, Map<String, State> stateMap, Map<String, List<String>> successors) throws IllegalModelException
+    }
 
 AlphabetElement <.. Choreography
 
-class MessageFlow {
-.. constructors ..
-+ MessageFlow(String message)
-.. getters ..
-+ String getMessage()
-}
-
-class Checker {
-}
+    class MessageFlow {
+    .. constructors ..
+    + MessageFlow(String message)
+    .. getters ..
+    + String getMessage()
+    }
 
 package statemachine {
 
-class Edge {
-.. constructors ..
-+ Edge(State source, State target)
-.. @override (Object) ..
-+ boolean equals(Object o)
-+ int hashCode()
-.. getters ..
-+ State getSource()
-+ State getTarget()
-}
+    class Edge {
+    .. constructors ..
+    + Edge(State source, State target)
+    .. @override (Object) ..
+    + boolean equals(Object o)
+    + int hashCode()
+    .. getters ..
+    + State getSource()
+    + State getTarget()
+    }
 note right of Edge
 Adaptor pattern
 {Adaptor = Edge, Adaptee = Couple}
 http://en.wikipedia.org/wiki/Adapter_pattern
 end note
 
-Couple <.. Edge
-
-interface State {
-.. accessors ..
-+ String getId()
-+ Choreography getChoreography()
-+ boolean isChecked()
-+ String getSpace()
-+ Set<State> getPredecessors()
-+ List<State> getSuccessors()
-+ List<String> getPeers()
-+ List<AlphabetElement> getAlphabet()
-+ Set<State> getSyncSet()
-+ Set<Couple<State, State>> getEdges(Set<State> visited)
-.. mutators ..
-+ void setChoreography(Choreography choreography)
-+ boolean addPredecessor(State predecessor)
-+ boolean addSuccessor(State successor)
-.. public methods ..
-+ boolean doCheckForAllSuccessors(String prefix, List<String> participantList, List<State> successors, List<MessageFlow> messageFlows)
-+ boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
-+ List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
-+ List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
-+ String lnt(List<AlphabetElement> alphabet) throws IllegalModelException
-}
+    interface State {
+    .. accessors ..
+    + String getId()
+    + Choreography getChoreography()
+    + boolean isChecked()
+    + String getSpace()
+    + Set<State> getPredecessors()
+    + List<State> getSuccessors()
+    + List<String> getPeers()
+    + List<AlphabetElement> getAlphabet()
+    + Set<State> getSyncSet()
+    + Set<Couple<State, State>> getEdges(Set<State> visited)
+    .. mutators ..
+    + void setChoreography(Choreography choreography)
+    + boolean addPredecessor(State predecessor)
+    + boolean addSuccessor(State successor)
+    .. public methods ..
+    + boolean doCheckForAllSuccessors(String prefix, List<String> participantList, List<State> successors, List<MessageFlow> messageFlows)
+    + boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
+    + List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
+    + List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
+    + String visit_lnt(Checker checker, List<AlphabetElement> alphabet) throws IllegalModelException
+    }
 
 Edge <.. State
 AlphabetElement <.. State
 Choreography <..> State
 
-abstract class AbstractState {
-.. constructors ..
-+ AbstractState(String id)
-+ AbstractState(String id, Set<State> successors)
-.. @override (Object) ..
-+ boolean equals(Object o)
-+ int hashCode()
-.. @override (State) ..
-+ String getId()
-+ Choreography getChoreography()
-+ boolean isChecked()
-+ String getSpace()
-+ Set<State> getPredecessors()
-+ List<State> getSuccessors()
-+ List<String> getPeers()
-+ List<AlphabetElement> getAlphabet()
-+ Set<State> getSyncSet()
-+ Set<Couple<State, State>> getEdges(Set<State> visited)
+    abstract class AbstractState {
+    .. constructors ..
+    + AbstractState(String id)
+    + AbstractState(String id, Set<State> successors)
+    .. @override (Object) ..
+    + boolean equals(Object o)
+    + int hashCode()
+    .. @override (State) ..
+    + String getId()
+    + Choreography getChoreography()
+    + boolean isChecked()
+    + String getSpace()
+    + Set<State> getPredecessors()
+    + List<State> getSuccessors()
+    + List<String> getPeers()
+    + List<AlphabetElement> getAlphabet()
+    + Set<State> getSyncSet()
+    + Set<Couple<State, State>> getEdges(Set<State> visited)
 
-+ void setChoreography(Choreography choreography)
-+ boolean addPredecessor(State predecessor)
-+ boolean addSuccessor(State successor)
+    + void setChoreography(Choreography choreography)
+    + boolean addPredecessor(State predecessor)
+    + boolean addSuccessor(State successor)
 
-+ boolean doCheckForAllSuccessors(String prefix, List<String> participantList, List<State> successors, List<MessageFlow> messageFlows)
-}
+    + boolean doCheckForAllSuccessors(String prefix, List<String> participantList, List<State> successors, List<MessageFlow> messageFlows)
+    }
 
 State <|-- AbstractState
 
-class InitialState {
-.. constructors ..
-+ InitialState(String id)
-+ InitialState(String id, Set<State> successors)
-.. @override (State) ..
-+ boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
-+ List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
-+ List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
-+ String lnt(List<AlphabetElement> alphabet) throws IllegalModelException
-}
+    class InitialState {
+    .. constructors ..
+    + InitialState(String id)
+    + InitialState(String id, Set<State> successors)
+    .. @override (State) ..
+    + boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
+    + List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
+    + List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
+    + String visit_lnt(Checker checker, List<AlphabetElement> alphabet) throws IllegalModelException
+    }
 
-abstract class IntermediateState {
-.. constructors ..
-+ IntermediateState(String id)
-+ IntermediateState(String id, Set<State> successors)
-}
+    abstract class IntermediateState {
+    .. constructors ..
+    + IntermediateState(String id)
+    + IntermediateState(String id, Set<State> successors)
+    }
 
-class FinalState {
-.. constructors ..
-+ FinalState(String id)
-.. @override (State) ..
-+ boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
-+ List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
-+ List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
-+ String lnt(List<AlphabetElement> alpha)
-}
+    class FinalState {
+    .. constructors ..
+    + FinalState(String id)
+    .. @override (State) ..
+    + boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
+    + List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
+    + List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
+    + String visit_lnt(Checker checker, List<AlphabetElement> alpha)
+    }
 
 AbstractState <|-- InitialState
 AbstractState <|-- IntermediateState
 AbstractState <|-- FinalState
 
-class InteractionState {
-.. constructors ..
-+ InteractionState(String id, List<String> peers, String initiator, List<MessageFlow> messageFlows) throws IllegalModelException
-+ InteractionState(String id, Set<State> successors, List<String> participants, String initiatingPeer, List<MessageFlow> messageFlows) throws IllegalModelException
-.. @override (State) ..
-+ boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
-+ List reachableParallelMerge(List<String> visited, int depth)
-+ List reachableInclusiveMerge(List<String> visited, int depth)
-+ String lnt(List<AlphabetElement> alpha)
-.. @override (AbstractState) ..
-+ List<String> getPeers()
-+ List<AlphabetElement> getAlphabet()
-.. getters ..
-+ String getInitiator()
-+ String getPartner()
-+ List<MessageFlow> getMessageFlows()
-.. private methods ..
-- List<AlphabetElement> buildList(String initiator, List<String> peers)
-- String dumpMessage()
-}
+    class InteractionState {
+    .. constructors ..
+    + InteractionState(String id, List<String> peers, String initiator, List<MessageFlow> messageFlows) throws IllegalModelException
+    + InteractionState(String id, Set<State> successors, List<String> participants, String initiatingPeer, List<MessageFlow> messageFlows) throws IllegalModelException
+    .. @override (State) ..
+    + boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
+    + List reachableParallelMerge(List<String> visited, int depth)
+    + List reachableInclusiveMerge(List<String> visited, int depth)
+    + String visit_lnt(Checker checker, List<AlphabetElement> alpha)
+    .. @override (AbstractState) ..
+    + List<String> getPeers()
+    + List<AlphabetElement> getAlphabet()
+    .. getters ..
+    + String getInitiator()
+    + String getPartner()
+    + List<MessageFlow> getMessageFlows()
+    .. private methods ..
+    - List<AlphabetElement> buildList(String initiator, List<String> peers)
+    - String dumpMessage()
+    }
 
 MessageFlow <.. InteractionState
 
-abstract class GatewayState {
-.. constructors ..
-+ GatewayState(String id)
-+ GatewayState(String id, Set<State> successors)
-}
+    abstract class GatewayState {
+    .. constructors ..
+    + GatewayState(String id)
+    + GatewayState(String id, Set<State> successors)
+    }
 
 IntermediateState <|-- InteractionState
 IntermediateState <|-- GatewayState
 
-abstract class GatewaySplitState {
-.. constructors ..
-+ GatewaySplitState(String id)
-+ GatewaySplitState(String id, Set<State> successors)
-.. @override (State) ..
-+ boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
-+ List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
-+ List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
-.. getters ..
-+ Set<State> getConeSet()
-.. setters ..
-+ void setConeSet(Set<State> coneSet)
-.. public methods ..
-+ String computeSetParallelComposition(List<State> synchroProcessSet, List<AlphabetElement> alphabet)
-+ String dumpSynchronization(List<AlphabetElement> rpm, boolean datatype, boolean arrow)
-+ Set<State> computeConeSet(Set<Couple<State, State>> edges, Set<State> states)
-}
+    abstract class GatewaySplitState {
+    .. constructors ..
+    + GatewaySplitState(String id)
+    + GatewaySplitState(String id, Set<State> successors)
+    .. @override (State) ..
+    + boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
+    + List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
+    + List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
+    .. getters ..
+    + Set<State> getConeSet()
+    .. setters ..
+    + void setConeSet(Set<State> coneSet)
+    .. public methods ..
+    + String computeSetParallelComposition(List<State> synchroProcessSet, List<AlphabetElement> alphabet)
+    + String dumpSynchronization(List<AlphabetElement> rpm, boolean datatype, boolean arrow)
+    + Set<State> computeConeSet(Set<Couple<State, State>> edges, Set<State> states)
+    }
 
-abstract class GatewayMergeState {
-.. constructors ..
-+ GatewayMergeState(String id)
-+ GatewayMergeState(String id, Set<State> successors)
-.. @override (State) ..
-+ boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
-+ List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
-+ List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
-}
+    abstract class GatewayMergeState {
+    .. constructors ..
+    + GatewayMergeState(String id)
+    + GatewayMergeState(String id, Set<State> successors)
+    .. @override (State) ..
+    + boolean checkConditionsFromSpec(String prefix, List<String> prePeerList, List<MessageFlow> preMessageFlows)
+    + List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
+    + List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
+    }
 
 GatewayState <|-- GatewayMergeState
 GatewayState <|-- GatewaySplitState
 
-class ChoiceState {
-.. constructors ..
-+ ChoiceState(String id)
-+ ChoiceState(String id, Set<State> successors)
-.. @override (State) ..
-+ String lnt(List<AlphabetElement> alphabet)
-}
+    class ChoiceState {
+    .. constructors ..
+    + ChoiceState(String id)
+    + ChoiceState(String id, Set<State> successors)
+    .. @override (State) ..
+    + String visit_lnt(Checker checker, List<AlphabetElement> alphabet)
+    }
 
-class SubsetSelectState {
-.. constructors ..
-+ SubsetSelectState(String id)
-+ SubsetSelectState(String id, Set<State> successors)
-.. @override (State) ..
-+ String lnt(List<AlphabetElement> alphabet) throws IllegalModelException
-.. @override (GatewaySplitState) ..
-+ List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
-}
+    class SubsetSelectState {
+    .. constructors ..
+    + SubsetSelectState(String id)
+    + SubsetSelectState(String id, Set<State> successors)
+    .. @override (State) ..
+    + String visit_lnt(Checker checker, List<AlphabetElement> alphabet) throws IllegalModelException
+    .. @override (GatewaySplitState) ..
+    + List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
+    }
 
-class AllSelectState {
-.. constructors ..
-+ AllSelectState(String id)
-+ AllSelectState(String id, Set<State> successors)
-.. @override (State) ..
-+ String lnt(List<AlphabetElement> alphabet)
-.. @override (GatewaySplitState) ..
-+ List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
-}
+    class AllSelectState {
+    .. constructors ..
+    + AllSelectState(String id)
+    + AllSelectState(String id, Set<State> successors)
+    .. @override (State) ..
+    + String visit_lnt(Checker checker, List<AlphabetElement> alphabet)
+    .. @override (GatewaySplitState) ..
+    + List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
+    }
 
 GatewaySplitState <|-- ChoiceState
 GatewaySplitState <|-- SubsetSelectState
 GatewaySplitState <|-- AllSelectState
 
-class SimpleJoinState {
-.. constructors ..
-+ SimpleJoinState(String id)
-+ SimpleJoinState(String id, Set<State> successors)
-.. @override (State) ..
-+ String lnt(List<AlphabetElement> alphabet)
-}
+    class SimpleJoinState {
+    .. constructors ..
+    + SimpleJoinState(String id)
+    + SimpleJoinState(String id, Set<State> successors)
+    .. @override (State) ..
+    + String visit_lnt(Checker checker, List<AlphabetElement> alphabet)
+    }
 
-class SubsetJoinState {
-.. constructors ..
-+ SubsetJoinState(String id)
-+ SubsetJoinState(String id, Set<State> successors)
-.. @override (State) ..
-+ String lnt(List<AlphabetElement> alphabet)
-.. @override (GatewayMergeState) ..
-+ List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
-}
+    class SubsetJoinState {
+    .. constructors ..
+    + SubsetJoinState(String id)
+    + SubsetJoinState(String id, Set<State> successors)
+    .. @override (State) ..
+    + String visit_lnt(Checker checker, List<AlphabetElement> alphabet)
+    .. @override (GatewayMergeState) ..
+    + List<Couple<String, Integer>> reachableInclusiveMerge(List<String> visited, int depth)
+    }
 
-class AllJoinState {
-.. constructors ..
-+ AllJoinState(String id)
-+ AllJoinState(String id, Set<State> successors)
-.. @override (State) ..
-+ String lnt(List<AlphabetElement> alphabet)
-.. @override (GatewayMergeState) ..
-+ List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
-}
+    class AllJoinState {
+    .. constructors ..
+    + AllJoinState(String id)
+    + AllJoinState(String id, Set<State> successors)
+    .. @override (State) ..
+    + String visit_lnt(Checker checker, List<AlphabetElement> alphabet)
+    .. @override (GatewayMergeState) ..
+    + List<Couple<String, Integer>> reachableParallelMerge(List<String> visited, int depth)
+    }
 
 GatewayMergeState <|-- SimpleJoinState
 GatewayMergeState <|-- SubsetJoinState
 GatewayMergeState <|-- AllJoinState
+
+}
+
+}
+
+package verification {
+
+package helpers {
+
+    class Couple<X,Y> {
+    .. constructors ..
+    + Couple(X first, Y second)
+    .. @override (Object) ..
+    + boolean equals(Object o)
+    + int hashCode()
+    .. getters ..
+    + X getFirst()
+    + Y getSecond()
+    .. setters ..
+    + void setFirst(X first)
+    + void setSecond(Y second)
+    }
+Couple <.. Edge
+
+    class Collections {
+    + {static} boolean isInList(T element, List<T> list)
+    + {static} boolean hasSuccInList(List<String> src, List<State> dst, List<State> successors)
+    + {static} List<String> keepZeroDepthStrings(List<Couple<String, Integer>> l)
+    + {static} List<T> removeDoubles(List<T> l, List<T> full)
+    }
+
+}
+
+class Checker {
+}
+
+class Tool {
+.. constructors ..
++ Tool()
++ Tool(boolean verbose)
+.. getters ..
++ boolean isVerbose()
+.. setters ..
++ void setVerbose(boolean verbose)
+.. public methods ..
++ void message(String msg)
++ void error(String msg)
++ void warning(String msg)
+}
+
+Tool <|-- Checker
 
 }
 

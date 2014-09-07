@@ -23,7 +23,8 @@ package refactoring_from_python.statemachine;
 
 import models.base.IllegalModelException;
 import refactoring_from_python.AlphabetElement;
-import refactoring_from_python.Couple;
+import refactoring_from_python.verification.Checker;
+import refactoring_from_python.verification.helpers.Couple;
 import refactoring_from_python.MessageFlow;
 
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public class InitialState extends AbstractState {
     }
 
     @Override
-    public String lnt(List<AlphabetElement> alphabet) throws IllegalModelException {
+    public String visit_lnt(Checker checker, List<AlphabetElement> alphabet) throws IllegalModelException {
         throw new IllegalModelException("Should not happen. Check if there is an incoming edge to the initial state");
     }
 
